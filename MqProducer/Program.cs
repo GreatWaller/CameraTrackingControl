@@ -17,7 +17,7 @@ channel.QueueDeclare(queue: "logs",
 const string message = "0 0.8 0.6 0.7 0.2 0.2 ";
 var body = Encoding.UTF8.GetBytes(message);
 
-for (int i = 0; i < 10; i++)
+for (int i = 0; i < 100; i++)
 {
     channel.BasicPublish(exchange: string.Empty,
                      routingKey: "logs",

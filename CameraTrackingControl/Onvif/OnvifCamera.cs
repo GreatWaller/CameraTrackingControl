@@ -55,7 +55,7 @@
 
             await apiService.PTZAbsoluteMove(pan, tilt, clampedZoom);
 
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
             isMoving = false;
         }
 
