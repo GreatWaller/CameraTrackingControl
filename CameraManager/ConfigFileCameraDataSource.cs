@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CameraManager.OnvifCamera;
 using Newtonsoft.Json;
 
 namespace CameraManager
@@ -16,9 +17,9 @@ namespace CameraManager
             this.configFile = configFile;
         }
 
-        public List<Camera> LoadCameras()
+        public List<CameraInfo> LoadCameras()
         {
-            List<Camera> cameras = new List<Camera>();
+            List<CameraInfo> cameras = new List<CameraInfo>();
 
             try
             {

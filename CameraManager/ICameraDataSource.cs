@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CameraManager.OnvifCamera;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,6 @@ namespace CameraManager
 {
     internal interface ICameraDataSource
     {
-        List<Camera> LoadCameras();
+        List<CameraInfo> LoadCameras();
     }
 }

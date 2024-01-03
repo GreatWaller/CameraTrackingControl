@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CameraManager
+namespace CameraManager.OnvifCamera
 {
     internal class Camera
     {
@@ -32,7 +32,7 @@ namespace CameraManager
         // 相机安装位置
         public double AngleToXAxis { get; set; }
         public double AngleToYAxis { get; set; }
-        public double AngleToZAxis { get; set;}
+        public double AngleToZAxis { get; set; }
 
 
         public Point3F Position { get; set; }

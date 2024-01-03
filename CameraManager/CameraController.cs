@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CameraManager.OnvifCamera;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace CameraManager
 {
     internal class CameraController
     {
-        private List<Camera> cameras; // 摄像机列表
+        private List<CameraInfo> cameras; // 摄像机列表
         private ICameraDataSource cameraDataSource;
 
         public CameraController(ICameraDataSource cameraDataSource)
@@ -19,9 +20,9 @@ namespace CameraManager
         }
 
         // 根据船只坐标找到最近的摄像机
-        public Camera FindNearestCamera(ShipLocation shipLocation)
+        public CameraInfo FindNearestCamera(ShipLocation shipLocation)
         {
-            Camera nearestCamera = null;
+            CameraInfo nearestCamera = null;
             double minDistance = double.MaxValue;
 
             foreach (var camera in cameras)
@@ -50,23 +51,24 @@ namespace CameraManager
             Console.WriteLine("Camera Details:");
             foreach (var camera in cameras)
             {
-                Console.WriteLine($"Id: {camera.Id}");
+                Console.WriteLine($"DeviceId: {camera.DeviceId}");
                 Console.WriteLine($"Latitude: {camera.Latitude}");
                 Console.WriteLine($"Longitude: {camera.Longitude}");
                 Console.WriteLine($"Altitude: {camera.Altitude}");
-                Console.WriteLine($"MinPan: {camera.MinPan}");
-                Console.WriteLine($"MaxPan: {camera.MaxPan}");
-                Console.WriteLine($"MinTilt: {camera.MinTilt}");
-                Console.WriteLine($"MaxTilt: {camera.MaxTilt}");
+                Console.WriteLine($"MinPan: {camera.MinPanDegree}");
+                Console.WriteLine($"MaxPan: {camera.MaxPanDegree}");
+                Console.WriteLine($"MinTilt: {camera.MinTiltDegree}");
+                Console.WriteLine($"MaxTilt: {camera.MaxTiltDegree}");
                 Console.WriteLine($"MinZoomLevel: {camera.MinZoomLevel}");
                 Console.WriteLine($"MaxZoomLevel: {camera.MaxZoomLevel}");
                 Console.WriteLine($"FocalLength: {camera.FocalLength}");
                 Console.WriteLine($"HomePanToNorth: {camera.HomePanToNorth}");
                 Console.WriteLine($"HomeTiltToHorizon: {camera.HomeTiltToHorizon}");
-                Console.WriteLine($"AngleToXAxis: {camera.AngleToXAxis}");
-                Console.WriteLine($"AngleToYAxis: {camera.AngleToYAxis}");
-                Console.WriteLine($"AngleToZAxis: {camera.AngleToZAxis}");
-                Console.WriteLine();
+                //Console.WriteLine($"AngleToXAxis: {camera.AngleToXAxis}");
+                //Console.WriteLine($"AngleToYAxis: {camera.AngleToYAxis}");
+                //Console.WriteLine($"AngleToZAxis: {camera.AngleToZAxis}");
+                Console.WriteLine($"VideoWidth: {camera.VideoWidth}");
+                Console.WriteLine($"VideoHeight: {camera.VideoHeight}");
             }
         }
 
@@ -127,5 +129,7 @@ namespace CameraManager
 
             return verticalTiltAngle;
         }
+
+
     }
 }

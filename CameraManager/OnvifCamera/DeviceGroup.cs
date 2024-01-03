@@ -6,8 +6,11 @@ using System.Threading.Tasks;
 
 namespace CameraManager.OnvifCamera
 {
-    internal class CameraConfig
+    internal class DeviceGroup
     {
-        public List<CameraInfo> Cameras { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+
     }
 }

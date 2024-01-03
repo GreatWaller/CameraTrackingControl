@@ -103,7 +103,7 @@
         {
             float middleDegrees = (max - min) / 2;
 
-            float degrees = normalizedAngle * middleDegrees - min;
+            float degrees = -normalizedAngle * middleDegrees + middleDegrees;
 
             return degrees;
         }
