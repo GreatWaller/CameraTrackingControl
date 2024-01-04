@@ -15,7 +15,10 @@ namespace CameraManager
         public ConfigFileCameraDataSource(string configFile)
         {
             this.configFile = configFile;
+            BaseUri = configFile;
         }
+
+        public string BaseUri { get; set; }
 
         public List<CameraInfo> LoadCameras()
         {

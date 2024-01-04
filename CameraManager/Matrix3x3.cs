@@ -8,15 +8,15 @@ namespace CameraManager
 {
     internal class Matrix3x3
     {
-        public double M11 { get; set; }
-        public double M12 { get; set; }
-        public double M13 { get; set; }
-        public double M21 { get; set; }
-        public double M22 { get; set; }
-        public double M23 { get; set; }
-        public double M31 { get; set; }
-        public double M32 { get; set; }
-        public double M33 { get; set; }
+        public float M11 { get; set; }
+        public float M12 { get; set; }
+        public float M13 { get; set; }
+        public float M21 { get; set; }
+        public float M22 { get; set; }
+        public float M23 { get; set; }
+        public float M31 { get; set; }
+        public float M32 { get; set; }
+        public float M33 { get; set; }
 
         public static Matrix3x3 operator *(Matrix3x3 a, Matrix3x3 b)
         {
@@ -44,20 +44,20 @@ namespace CameraManager
         }
 
         // 计算相机的旋转矩阵
-        public static Matrix3x3 CalculateCameraRotationMatrix(double pitch, double yaw, double roll)
+        public static Matrix3x3 CalculateCameraRotationMatrix(float pitch, float yaw, float roll)
         {
             // 计算相机的旋转矩阵
             var cameraRotationMatrix = new Matrix3x3
             {
-                M11 = Math.Cos(yaw) * Math.Cos(roll),
-                M12 = Math.Cos(yaw) * Math.Sin(roll) * Math.Sin(pitch) - Math.Sin(yaw) * Math.Cos(pitch),
-                M13 = Math.Cos(yaw) * Math.Sin(roll) * Math.Cos(pitch) + Math.Sin(yaw) * Math.Sin(pitch),
-                M21 = Math.Sin(yaw) * Math.Cos(roll),
-                M22 = Math.Sin(yaw) * Math.Sin(roll) * Math.Sin(pitch) + Math.Cos(yaw) * Math.Cos(pitch),
-                M23 = Math.Sin(yaw) * Math.Sin(roll) * Math.Cos(pitch) - Math.Cos(yaw) * Math.Sin(pitch),
-                M31 = -Math.Sin(roll),
-                M32 = Math.Cos(roll) * Math.Sin(pitch),
-                M33 = Math.Cos(roll) * Math.Cos(pitch)
+                M11 = MathF.Cos(yaw) * MathF.Cos(roll),
+                M12 = MathF.Cos(yaw) * MathF.Sin(roll) * MathF.Sin(pitch) - MathF.Sin(yaw) * MathF.Cos(pitch),
+                M13 = MathF.Cos(yaw) * MathF.Sin(roll) * MathF.Cos(pitch) + MathF.Sin(yaw) * MathF.Sin(pitch),
+                M21 = MathF.Sin(yaw) * MathF.Cos(roll),
+                M22 = MathF.Sin(yaw) * MathF.Sin(roll) * MathF.Sin(pitch) + MathF.Cos(yaw) * MathF.Cos(pitch),
+                M23 = MathF.Sin(yaw) * MathF.Sin(roll) * MathF.Cos(pitch) - MathF.Cos(yaw) * MathF.Sin(pitch),
+                M31 = -MathF.Sin(roll),
+                M32 = MathF.Cos(roll) * MathF.Sin(pitch),
+                M33 = MathF.Cos(roll) * MathF.Cos(pitch)
             };
 
             return cameraRotationMatrix;

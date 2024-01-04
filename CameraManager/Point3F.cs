@@ -8,11 +8,11 @@ namespace CameraManager
 {
     internal class Point3F
     {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Z { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
 
-        public Point3F(double x, double y, double z)
+        public Point3F(float x, float y, float z)
         {
             X = x;
             Y = y;

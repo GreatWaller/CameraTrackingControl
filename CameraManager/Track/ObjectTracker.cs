@@ -8,9 +8,6 @@ using OpenCvSharp;
 using OpenCvSharp.Dnn;
 using OpenCvSharp.Extensions;
 using OpenCvSharp.Tracking;
-using OpenCvSharp.Dnn;
-using static System.Net.Mime.MediaTypeNames;
-using System.Diagnostics;
 
 namespace CameraManager.Track
 {
@@ -30,9 +27,9 @@ namespace CameraManager.Track
         // 设置只检测人的类ID
         int personClassId = 0; // 人的类ID为0
 
-        public ObjectTracker(int cameraIndex)
+        public ObjectTracker(int cameraIndex, string rtsp)
         {
-            capture = new VideoCapture(cameraIndex);
+            capture = new VideoCapture(rtsp);
             //window = new Window($"Object Tracking - Camera {cameraIndex}");
 
             // 加载 YOLO 网络
@@ -58,7 +55,7 @@ namespace CameraManager.Track
 
                     DetectAndTrackObjects(frame);
 
-                    window.ShowImage(frame);
+                    //window.ShowImage(frame);
 
                     // 添加适当的延时，以便观察图像并避免过度占用CPU
                     Cv2.WaitKey(1);
@@ -69,7 +66,7 @@ namespace CameraManager.Track
         public void SetSelectedObject(int mouseX, int mouseY)
         {
             selectedObject = GetClickedObject(mouseX, mouseY);
-            shouldRun = false; // 结束追踪任务
+            //shouldRun = false; // 结束追踪任务
         }
 
         public void StopTracking()
