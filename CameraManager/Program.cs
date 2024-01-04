@@ -1,5 +1,6 @@
 ﻿using CameraManager.OnvifCamera;
 using System.Drawing;
+using System.Numerics;
 
 namespace CameraManager
 {
@@ -23,6 +24,7 @@ namespace CameraManager
             cameraController.PrintCameraDetails();
 
 
+            #region no need for now
 
             //// 创建相机对象
             //var camera = new Camera
@@ -52,6 +54,7 @@ namespace CameraManager
             //// 计算相机需要垂直转动的角度
             //var verticalTiltAngle = cameraController.CalculateVerticalTiltAngle(objectPositionInImage, camera);
 
+            #endregion 
 
             // ptz controll test
             // test device id: Cam-9ac923
@@ -61,7 +64,7 @@ namespace CameraManager
 
 
             // test pan/tilt/zoom calculation
-            var objectCoordinates = new Point3F(1.7F, 1.7F, -1);
+            var objectCoordinates = new Vector3(1.7F, 1.7F, -1);
             cameraController.PointToTarget(objectCoordinates, deviceId);
         }
     }

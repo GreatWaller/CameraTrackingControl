@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -34,9 +35,9 @@ namespace CameraManager
             };
         }
 
-        public static Point3F operator *(Matrix3x3 matrix, Point3F point)
+        public static Vector3 operator *(Matrix3x3 matrix, Vector3 point)
         {
-            return new Point3F(
+            return new Vector3(
                 matrix.M11 * point.X + matrix.M12 * point.Y + matrix.M13 * point.Z,
                 matrix.M21 * point.X + matrix.M22 * point.Y + matrix.M23 * point.Z,
                 matrix.M31 * point.X + matrix.M32 * point.Y + matrix.M33 * point.Z

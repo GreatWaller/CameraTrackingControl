@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace CameraManager
 {
-    internal class ShipLocation
+    internal class GeoLocation
     {
         public double Latitude { get; set; }
         public double Longitude { get; set; }
+        public double Altitude { get; set; }
     }
 }

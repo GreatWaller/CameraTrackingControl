@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,14 +26,14 @@ namespace CameraManager
         }
 
         // 根据船只坐标找到最近的摄像机
-        public CameraInfo FindNearestCamera(ShipLocation shipLocation)
+        public CameraInfo FindNearestCamera(GeoLocation shipLocation)
         {
             CameraInfo nearestCamera = null;
             double minDistance = double.MaxValue;
 
             foreach (var camera in cameras)
             {
-                double distance = CalculateDistance(shipLocation, new ShipLocation { Latitude = camera.Latitude, Longitude = camera.Longitude });
+                double distance = CalculateDistance(shipLocation, new GeoLocation { Latitude = camera.Latitude, Longitude = camera.Longitude });
                 if (distance < minDistance)
                 {
                     minDistance = distance;
@@ -44,7 +45,7 @@ namespace CameraManager
         }
 
         // 计算两点间距离
-        private double CalculateDistance(ShipLocation location1, ShipLocation location2)
+        private double CalculateDistance(GeoLocation location1, GeoLocation location2)
         {
             // 使用合适的距离计算公式，比如Haversine公式
             // 这里给出一个简单的计算方式
@@ -79,10 +80,10 @@ namespace CameraManager
             }
         }
 
-        #region calculate by pixel
+        #region calculate by pixel，no need for now
 
         // 计算物体在相机图像中的位置
-        public PointF CalculateObjectPositionInImage(Point3F objectCoordinates, Camera camera)
+        public PointF CalculateObjectPositionInImage(Vector3 objectCoordinates, Camera camera)
         {
             // 将物体坐标从世界坐标系转换到相机坐标系
             var objectCoordinatesInCameraCoordinates = camera.CameraRotationMatrix * objectCoordinates;
@@ -98,7 +99,7 @@ namespace CameraManager
         }
 
         // 计算相机需要水平转动的角度
-        public double CalculateHorizontalPanAngle(PointF objectPositionInImage, Camera camera)
+        public double CalculateHorizontalPanAngle(Vector3 objectPositionInImage, Camera camera)
         {
             // 计算相机需要水平转动的角度
             var horizontalPanAngle = Math.Atan2(objectPositionInImage.X, camera.FocalLength) * 180 / Math.PI - camera.HorizontalPanAngle;
@@ -108,7 +109,7 @@ namespace CameraManager
 
 
         // 计算相机需要垂直转动的角度
-        public double CalculateVerticalTiltAngle(PointF objectPositionInImage, Camera camera)
+        public double CalculateVerticalTiltAngle(Vector3 objectPositionInImage, Camera camera)
         {
             // 计算相机需要垂直转动的角度
             var verticalTiltAngle = Math.Atan2(objectPositionInImage.Y, camera.FocalLength) * 180 / Math.PI - camera.VerticalTiltAngle;
@@ -119,13 +120,13 @@ namespace CameraManager
 
         #region core
 
-        public Point3F CalculateObjectPositionToCamera(Point3F objectCoordinates, CameraInfo camera)
+        public Vector3 CalculateObjectPositionToCamera(Vector3 objectCoordinates, CameraInfo camera)
         {
             // 将物体坐标从世界坐标系转换到相机坐标系
             var objectCoordinatesInCameraCoordinates = camera.CameraRotationMatrix * objectCoordinates;
             return objectCoordinatesInCameraCoordinates;
         }
-        public float CalculateHorizontalPanAngle(Point3F objectCoordinates, CameraInfo camera)
+        public float CalculateHorizontalPanAngle(Vector3 objectCoordinates, CameraInfo camera)
         {
             // 计算相机需要水平转动的角度
             var horizontalPanAngle = MathF.Atan2(objectCoordinates.Y, objectCoordinates.X) * 180 / MathF.PI - camera.HomePanToNorth;
@@ -136,7 +137,7 @@ namespace CameraManager
             }
             return horizontalPanAngle;
         }
-        public float CalculateVerticalTiltAngle(Point3F objectCoordinates, CameraInfo camera)
+        public float CalculateVerticalTiltAngle(Vector3 objectCoordinates, CameraInfo camera)
         {
             // 计算相机需要垂直转动的角度
             var verticalTiltAngle = MathF.Atan2(objectCoordinates.Z, objectCoordinates.Y) * 180 / MathF.PI - camera.HomeTiltToHorizon;
@@ -145,7 +146,7 @@ namespace CameraManager
             return verticalTiltAngle;
         }
 
-        private int CalculateZoomLevel(Point3F objectPositionToCamera, CameraInfo cameraInfo)
+        private int CalculateZoomLevel(Vector3 objectPositionToCamera, CameraInfo cameraInfo)
         {
             var F = cameraInfo.VideoWidth * objectPositionToCamera.X / cameraInfo.Fy / objectPositionToCamera.Z;
             F = Math.Clamp(MathF.Abs(F), 1f, cameraInfo.MaxZoomLevel);
@@ -192,7 +193,7 @@ namespace CameraManager
         /// <param name="objectCoordinates">通过经纬计算出来的直角坐标，高度就是安装时设置的参数Altitude</param>
         /// <param name="deviceId"></param>
         /// <returns></returns>
-        public bool PointToTarget(Point3F objectCoordinates, string deviceId)
+        public bool PointToTarget(Vector3 objectCoordinates, string deviceId)
         {
            CameraInfo cameraInfo = cameras.FirstOrDefault(p=>p.DeviceId == deviceId);
             if (cameraInfo == null)
@@ -213,13 +214,60 @@ namespace CameraManager
             // 计算相机需要变焦的倍数
             var zoomLevel = CalculateZoomLevel(objectPositionToCamera,cameraInfo);
 
-            Move(deviceId, horizontalPanAngle, verticalTiltAngle, zoomLevel);
+            var result = Move(deviceId, horizontalPanAngle, verticalTiltAngle, zoomLevel);
 
-            return true;
+            return result;
         }
 
+        public bool PointToTargetByGeo(GeoLocation location)
+        {
+            /* 1 find the nearest camera
+             * 2 point camera at target
+             */
+            var camera = FindNearestCamera(location);
+            var target = GetRelativeCartesianCoordinates(camera.Latitude, camera.Longitude, camera.Altitude, location.Latitude, location.Longitude, location.Altitude);
 
+            var result = PointToTarget(target, camera.DeviceId);
+            return true;
+        }
         #endregion
 
+
+        #region helper
+        public static Vector3 ConvertLatLngToCartesian(double latitude, double longitude, double altitude)
+        {
+            // Convert latitude and longitude to radians
+            double latRad = latitude * Math.PI / 180;
+            double lonRad = longitude * Math.PI / 180;
+
+            // Calculate the Earth's radius at the given latitude
+            double radius = 6378137.0; // Earth's mean radius in meters
+            double flattening = 1 / 298.257223563; // Earth's flattening
+            double e2 = flattening * (2 - flattening);
+            double a = radius * (1 - e2);
+            double b = radius * Math.Sqrt(1 - e2);
+            double c = Math.Sqrt(a * a - b * b);
+
+            // Calculate the x, y, and z coordinates
+            double x = (a * Math.Cos(latRad) * Math.Cos(lonRad) + altitude) * 1000; // Convert to meters
+            double y = (a * Math.Cos(latRad) * Math.Sin(lonRad)) * 1000; // Convert to meters
+            double z = ((b * b / a) * Math.Sin(latRad) + altitude) * 1000; // Convert to meters
+
+            // Return the Cartesian coordinates
+            return new Vector3((float)x, (float)y, (float)z);
+        }
+        public static Vector3 GetRelativeCartesianCoordinates(double latitude1, double longitude1, double altitude1, double latitude2, double longitude2, double altitude2)
+        {
+            // Convert the two sets of latitude and longitude to Cartesian coordinates
+            Vector3 cartesianCoordinates1 = ConvertLatLngToCartesian(latitude1, longitude1, altitude1);
+            Vector3 cartesianCoordinates2 = ConvertLatLngToCartesian(latitude2, longitude2, altitude2);
+
+            // Calculate the relative Cartesian coordinates
+            Vector3 relativeCartesianCoordinates = cartesianCoordinates2 - cartesianCoordinates1;
+
+            // Return the relative Cartesian coordinates
+            return relativeCartesianCoordinates;
+        }
+        #endregion
     }
 }
