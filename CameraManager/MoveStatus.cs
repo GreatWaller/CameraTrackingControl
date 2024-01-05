@@ -16,5 +16,7 @@ namespace CameraManager
 
         public CameraStatus CameraStatus { get; set; }
         public bool IsRunning { get; set; } = false;
+
+
     }
 }

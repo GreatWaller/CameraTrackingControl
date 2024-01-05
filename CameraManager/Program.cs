@@ -1,6 +1,8 @@
 ﻿using CameraManager.OnvifCamera;
+using CameraManager.Track;
 using System.Drawing;
 using System.Numerics;
+using CameraManager.Track;
 
 namespace CameraManager
 {
@@ -59,13 +61,28 @@ namespace CameraManager
             // ptz controll test
             // test device id: Cam-9ac923
             string deviceId = "Cam-2bfd09";
-            cameraController.PrepareToMove(deviceId);
+            //cameraController.PrepareToMove(deviceId);
             //cameraController.Move(deviceId,15,30, 12);
 
 
             // test pan/tilt/zoom calculation
-            var objectCoordinates = new Vector3(1.7F, 1.7F, -1);
+            var objectCoordinates = new Vector3(0.1F, 1.7F, -1);
             cameraController.PointToTarget(objectCoordinates, deviceId);
+
+
+
+            #region test detection
+            //// Create an instance of the detection algorithm
+            //IDetectionAlgorithm detectionAlgorithm = new DetectionAlgorithm();
+
+            //// Create an instance of the video processing service
+            //VideoProcessingService videoProcessingService = new VideoProcessingService(deviceId, detectionAlgorithm);
+
+            //// Process the video
+            //videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
+
+            cameraController.CreateVideoProcess(deviceId);
+            #endregion
         }
     }
 }

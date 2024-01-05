@@ -8,9 +8,9 @@ namespace CameraManager.OnvifCamera
 {
     internal class CameraStatus
     {
-        public double PanPosition { get; set; }
-        public double TiltPosition { get; set; }
-        public double ZoomPosition { get; set; }
+        public float PanPosition { get; set; }
+        public float TiltPosition { get; set; }
+        public float ZoomPosition { get; set; }
         public string PanTiltStatus { get; set; }
         public string ZoomStatus { get; set; }
         public string UtcDateTime { get; set; }

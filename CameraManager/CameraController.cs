@@ -1,4 +1,6 @@
 ﻿using CameraManager.OnvifCamera;
+using CameraManager.Track;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,12 +19,23 @@ namespace CameraManager
         private readonly CameraApiService cameraApiService;
         private Dictionary<string,MoveStatus> moveStatus = new Dictionary<string,MoveStatus>();
 
+        #region detect and track
+        // Create an instance of the detection algorithm
+        private readonly IDetectionAlgorithm detectionAlgorithm = new DetectionAlgorithm();
+
+        private Dictionary<string,VideoProcessingService> videoProcessServices = new Dictionary<string, VideoProcessingService>();
+
+        
+        #endregion
+
         public CameraController(ICameraDataSource _cameraDataSource, CameraApiService _cameraApiService)
         {
             cameraApiService = _cameraApiService;
             this.cameraDataSource = _cameraDataSource;
 
             cameras = _cameraDataSource.LoadCameras();
+
+
         }
 
         // 根据船只坐标找到最近的摄像机
@@ -156,7 +169,7 @@ namespace CameraManager
         #endregion
 
         #region Move Controll
-        public bool PrepareToMove(string deviceId)
+        private bool PrepareToMove(string deviceId)
         {
             if (string.IsNullOrEmpty(deviceId))
             {
@@ -166,20 +179,39 @@ namespace CameraManager
             var status = cameraApiService.GetCurrentStatus(deviceId);
             if (status != null && status.Error== "NO error")
             {
-                moveStatus.Add(deviceId, new MoveStatus(status));
+                moveStatus.TryAdd(deviceId, new MoveStatus(status));
             }
 
             return true;
         }
 
-        public bool Move(string deviceId, float panInDegree, float tiltInDegree, int zoomLevel)
+        public bool MoveAbsolute(string deviceId, float panInDegree, float tiltInDegree, int zoomLevel)
         {
             if (string.IsNullOrEmpty(deviceId))
             {
                 return false;
             }
 
+            PrepareToMove(deviceId);
+
             var status = cameraApiService.MoveToAbsolutePositionInDegree(deviceId, panInDegree, tiltInDegree, zoomLevel);
+            if (status != null && status.Error == "NO error")
+            {
+                moveStatus[deviceId].CameraStatus = status;
+            }
+            return true;
+        }
+
+        public bool MoveRelative(string deviceId, float panInDegree, float tiltInDegree, int zoomLevel)
+        {
+            if (string.IsNullOrEmpty(deviceId))
+            {
+                return false;
+            }
+
+            PrepareToMove(deviceId);
+
+            var status = cameraApiService.MoveToRelativePositionInDegree(deviceId, panInDegree, tiltInDegree, zoomLevel);
             if (status != null && status.Error == "NO error")
             {
                 moveStatus[deviceId].CameraStatus = status;
@@ -214,7 +246,7 @@ namespace CameraManager
             // 计算相机需要变焦的倍数
             var zoomLevel = CalculateZoomLevel(objectPositionToCamera,cameraInfo);
 
-            var result = Move(deviceId, horizontalPanAngle, verticalTiltAngle, zoomLevel);
+            var result = MoveAbsolute(deviceId, horizontalPanAngle, verticalTiltAngle, zoomLevel);
 
             return result;
         }
@@ -268,6 +300,51 @@ namespace CameraManager
             // Return the relative Cartesian coordinates
             return relativeCartesianCoordinates;
         }
+        #endregion
+
+
+        #region tracking
+
+        public void TrackingByImage(string deviceId, Rect2d detection)
+        {
+            Vector3 delta = AdjustCameraPose(deviceId, detection);
+            MoveRelative(deviceId, delta.X, delta.Y, (int)delta.Z);
+        }
+        public Vector3 AdjustCameraPose(string deviceId, Rect2d detection)
+        {
+            var cameraInfo = cameras.FirstOrDefault(camera => camera.DeviceId == deviceId);
+            var status = moveStatus[deviceId];
+
+            return AdjustCameraPoseInternal(detection, cameraInfo, status);
+        }
+        private Vector3 AdjustCameraPoseInternal(Rect2d detection, CameraInfo cameraInfo, MoveStatus status)
+        {
+            // 计算水平和垂直偏移量
+            float offsetX = (float)detection.X / cameraInfo.VideoWidth * cameraInfo.CCDWidth /2;
+            float offsetY = (float)detection.Y / cameraInfo.VideoHeight * cameraInfo.CCDHeight/2;
+
+            // 计算水平旋转角度
+            var HorizontalRotationAngle = MathF.Atan2(offsetX, cameraInfo.FocalLength * status.CameraStatus.ZoomPosition);
+
+            // 计算垂直旋转角度
+            var VerticalRotationAngle = MathF.Atan2(offsetY, cameraInfo.FocalLength * status.CameraStatus.ZoomPosition);
+
+            // TODO: zoom
+            return new Vector3(HorizontalRotationAngle, VerticalRotationAngle, status.CameraStatus.ZoomPosition);
+        }
+
+        public void CreateVideoProcess(string deviceId)
+        {
+            // Create an instance of the video processing service
+            VideoProcessingService videoProcessingService = new VideoProcessingService(deviceId, detectionAlgorithm);
+            videoProcessingService.DetectionEvent += TrackingByImage;
+
+            videoProcessServices.Add(deviceId, videoProcessingService);
+
+            videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
+        }
+
+
         #endregion
     }
 }

@@ -173,11 +173,60 @@ namespace CameraManager.OnvifCamera
             {
                 Trace.TraceError($"Failed to GetStatusInDegree");
                 //throw;
-                cameraStatus.Error = $"Failed to Move. [DeviceId: {deviceId}]";
+                cameraStatus.Error = $"Failed to MoveAbsolute. [DeviceId: {deviceId}]";
             }
 
             return cameraStatus;
 
+        }
+
+        internal CameraStatus MoveToRelativePositionInDegree(string deviceId, float panInDegree, float tiltInDegree, int zoomLevel
+            , float panSpeed = 1, float tiltSpeed = 1, float zoomSpeed = 1)
+        {
+            var cameraStatus = new CameraStatus();
+
+            if (cameraInfos.Count == 0)
+            {
+                cameraInfos = GetAllDevices();
+            }
+
+            var cameraInfo = cameraInfos.Find(p => p.DeviceId == deviceId);
+            if (cameraInfo == null)
+            {
+                cameraStatus.Error = $"Can not find the Device: {deviceId}";
+                return cameraStatus;
+            }
+            var parameters = new Dictionary<string, string>()
+            {
+                { "host", cameraInfo.Ipv4Address },
+                {"username", cameraInfo.UserName },
+                {"password", cameraInfo.Password },
+                {"profileToken", cameraInfo.ProfileToken },
+                {"panInDegree", panInDegree.ToString()},
+                {"tiltInDegree", tiltInDegree.ToString()},
+                {"zoomInLevel",zoomLevel.ToString()},
+                {"panSpeed",panSpeed.ToString()},
+                {"tiltSpeed",tiltSpeed.ToString()},
+                {"zoomSpeed",zoomSpeed.ToString()}
+            };
+
+            var uri = restApiClient.BuildUri("PTZ/RelativeMoveWithDegree", parameters);
+
+            try
+            {
+                var jsonString = restApiClient.PostAsync(uri, string.Empty).Result;
+                // 将JSON字符串反序列化为ApiResponse对象
+                cameraStatus = JsonConvert.DeserializeObject<CameraStatus>(jsonString);
+
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError($"Failed to GetStatusInDegree");
+                //throw;
+                cameraStatus.Error = $"Failed to MoveAbsolute. [DeviceId: {deviceId}]";
+            }
+
+            return cameraStatus;
         }
     }
 }

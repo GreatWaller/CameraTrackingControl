@@ -40,5 +40,8 @@ namespace CameraManager.OnvifCamera
 
         public float Fy { get; set; } = 2500f;
 
+        public float CCDWidth { get; set; } = 5.4f;
+        public float CCDHeight { get; set; } = 4.0f;
+
     }
 }
