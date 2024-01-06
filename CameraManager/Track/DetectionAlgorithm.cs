@@ -126,6 +126,11 @@ namespace CameraManager.Track
                         Cv2.MinMaxLoc(prob.Row(i)
                             .ColRange(prefix, prob.Cols), out _, out Point max);
                         var classes = max.X;
+
+                        if (classes != 0)
+                        {
+                            continue;
+                        }
                         var probability = prob.At<float>(i, classes + prefix);
 
                         if (probability > threshold) //more accuracy, you can cancel it
@@ -158,7 +163,7 @@ namespace CameraManager.Track
             //using non-maximum suppression to reduce overlapping low confidence box
             CvDnn.NMSBoxes(boxes, confidences, threshold, nmsThreshold, out int[] indices);
 
-            Console.WriteLine($"NMSBoxes drop {confidences.Count - indices.Length} overlapping result.");
+            //Console.WriteLine($"NMSBoxes drop {confidences.Count - indices.Length} overlapping result.");
 
             foreach (var i in indices)
             {
@@ -184,7 +189,7 @@ namespace CameraManager.Track
         {
             //label formating
             var label = $"{classes} {probability * 100:0.00}%";
-            Console.WriteLine($"confidence {confidence * 100:0.00}% {label}");
+            //Console.WriteLine($"confidence {confidence * 100:0.00}% {label}");
             var x1 = (centerX - width / 2) < 0 ? 0 : centerX - width / 2; //avoid left side over edge
             //draw result
             image.Rectangle(new Point(x1, centerY - height / 2), new Point(centerX + width / 2, centerY + height / 2), new Scalar(0,255,0), 2);

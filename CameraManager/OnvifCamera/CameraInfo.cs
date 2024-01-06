@@ -23,7 +23,7 @@ namespace CameraManager.OnvifCamera
         public float MaxTiltDegree { get; set; }
         public float MinZoomLevel { get; set; }
         public float MaxZoomLevel { get; set; }
-        public float FocalLength { get; set; }
+        public float FocalLength { get; set; } = 4.8f;
         public float Roll { get; set; }
         public float Pitch { get; set; }
         public float Yaw { get; set; }

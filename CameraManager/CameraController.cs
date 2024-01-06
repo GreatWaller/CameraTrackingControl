@@ -180,6 +180,7 @@ namespace CameraManager
             if (status != null && status.Error== "NO error")
             {
                 moveStatus.TryAdd(deviceId, new MoveStatus(status));
+                Console.WriteLine($"Current Stutus: [Zoom: {moveStatus[deviceId].CameraStatus.ZoomPosition}]");
             }
 
             return true;
@@ -320,17 +321,17 @@ namespace CameraManager
         private Vector3 AdjustCameraPoseInternal(Rect2d detection, CameraInfo cameraInfo, MoveStatus status)
         {
             // 计算水平和垂直偏移量
-            float offsetX = (float)detection.X / cameraInfo.VideoWidth * cameraInfo.CCDWidth /2;
-            float offsetY = (float)detection.Y / cameraInfo.VideoHeight * cameraInfo.CCDHeight/2;
+            float offsetX = (float)(detection.X - cameraInfo.VideoWidth/2) / cameraInfo.VideoWidth * cameraInfo.CCDWidth /2;
+            float offsetY = (float)(detection.Y - cameraInfo.VideoHeight/2) / cameraInfo.VideoHeight * cameraInfo.CCDHeight/2;
 
             // 计算水平旋转角度
-            var HorizontalRotationAngle = MathF.Atan2(offsetX, cameraInfo.FocalLength * status.CameraStatus.ZoomPosition);
+            var HorizontalRotationAngle = MathF.Atan2(offsetX, cameraInfo.FocalLength * status.CameraStatus.ZoomPosition) * 180 / MathF.PI;
 
             // 计算垂直旋转角度
-            var VerticalRotationAngle = MathF.Atan2(offsetY, cameraInfo.FocalLength * status.CameraStatus.ZoomPosition);
+            var VerticalRotationAngle = MathF.Atan2(offsetY, cameraInfo.FocalLength * status.CameraStatus.ZoomPosition) * 180 / MathF.PI;
 
             // TODO: zoom
-            return new Vector3(HorizontalRotationAngle, VerticalRotationAngle, status.CameraStatus.ZoomPosition);
+            return new Vector3(HorizontalRotationAngle, VerticalRotationAngle, 0);
         }
 
         public void CreateVideoProcess(string deviceId)

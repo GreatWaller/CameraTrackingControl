@@ -51,7 +51,7 @@ namespace CameraManager.OnvifCamera
                 cameraInfo.MaxTiltDegree = device.MaxTiltDegree;
                 cameraInfo.MinZoomLevel = device.MinZoomLevel;
                 cameraInfo.MaxZoomLevel = device.MaxZoomLevel;
-                cameraInfo.FocalLength = device.FocalLength;
+                cameraInfo.FocalLength = 4.8f;
 
                 try
                 {
@@ -217,13 +217,13 @@ namespace CameraManager.OnvifCamera
                 var jsonString = restApiClient.PostAsync(uri, string.Empty).Result;
                 // 将JSON字符串反序列化为ApiResponse对象
                 cameraStatus = JsonConvert.DeserializeObject<CameraStatus>(jsonString);
-
+                Console.WriteLine($"Moved: [DeviceId: {deviceId}, Pan: {panInDegree}, Tilt: {tiltInDegree}, Zoom: {zoomLevel}]");
             }
             catch (Exception ex)
             {
-                Trace.TraceError($"Failed to GetStatusInDegree");
+                Trace.TraceError($"Failed to MoveRelative [DeviceId: {deviceId}, Pan: {panInDegree}, Tilt: {tiltInDegree}, Zoom: {zoomLevel}]");
                 //throw;
-                cameraStatus.Error = $"Failed to MoveAbsolute. [DeviceId: {deviceId}]";
+                cameraStatus.Error = $"Failed to MoveRelative. [DeviceId: {deviceId}, Pan: {panInDegree}, Tilt: {tiltInDegree}, Zoom: {zoomLevel}]";
             }
 
             return cameraStatus;

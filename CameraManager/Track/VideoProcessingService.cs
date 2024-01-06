@@ -66,8 +66,14 @@ namespace CameraManager.Track
                 if (detections.Count > 0)
                 {
                     var detection = detections[0];
-
-                    DetectionEvent.Invoke(deviceId, detection);
+                    Console.WriteLine($"Detection: {detection.X}, {detection.Y}");
+                    isCameraMoving = true;
+                    Task task = Task.Run(() =>
+                    {
+                        DetectionEvent.Invoke(deviceId, detection);
+                        isCameraMoving = false;
+                    });
+                    
                 }
 
                 // Display the frame
