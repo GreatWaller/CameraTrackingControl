@@ -21,6 +21,8 @@ namespace CameraManager.Track
         private bool isCameraMoving=false;
         private const int step = 4;
 
+        private bool shouldStop=false;
+
         public event DetectionEventHandler DetectionEvent;
         public VideoProcessingService(string _deviceId, IDetectionAlgorithm detectionAlgorithm)
         {
@@ -33,13 +35,17 @@ namespace CameraManager.Track
         {
             // Load the video
             VideoCapture capture = new VideoCapture(videoPath);
-
+            capture.Set(VideoCaptureProperties.BufferSize, 24);
             // Detect objects every 5 frames
             int frameCount = 0;
             using var frame = new Mat();
             // Loop over the frames
             while (true)
             {
+                if (shouldStop)
+                {
+                    break;
+                }
                 // Read the frame
                 capture.Read(frame);
                 frameCount++;
@@ -65,7 +71,9 @@ namespace CameraManager.Track
                 // move camera
                 if (detections.Count > 0)
                 {
-                    var detection = detections[0];
+                    //var detection = detections[0];
+                    var detection = detections.OrderBy(p => Math.Abs(p.X - frame.Width / 2)).First();
+
                     Console.WriteLine($"Detection: {detection.X}, {detection.Y}");
                     isCameraMoving = true;
                     Task task = Task.Run(() =>
@@ -77,7 +85,7 @@ namespace CameraManager.Track
                 }
 
                 // Display the frame
-                Cv2.ImShow("Frame", frame);
+                Cv2.ImShow(deviceId, frame);
 
                 // Press Esc to exit
                 if (Cv2.WaitKey(1) == 27)
@@ -88,6 +96,12 @@ namespace CameraManager.Track
 
             // Release the capture object
             capture.Release();
+            Cv2.DestroyWindow(deviceId);
+        }
+
+        internal void Stop()
+        {
+            shouldStop=true;
         }
     }
 }

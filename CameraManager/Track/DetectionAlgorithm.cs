@@ -13,16 +13,28 @@ namespace CameraManager.Track
         private static DetectionAlgorithm _instance;
         private static readonly object _lock = new object();
         // 设置只检测人的类ID
-        int personClassId = 0; // 人的类ID为0
+        const int personClassId = 0; // 人的类ID为0
 
         private Net _net;
+        //get output layer name
+        string[] outNames;
+        //create mats for output layer
+        Mat[] outs;
 
         public DetectionAlgorithm()
         {
             // Load the model
-            _net = CvDnn.ReadNetFromDarknet("Config/yolov3.cfg", "yolov3.weights");
+            string cfg_path = Path.Combine(Directory.GetCurrentDirectory(), "Config", "yolov3.cfg");
+            string weight_path = Path.Combine(Directory.GetCurrentDirectory(), "Config", "yolov3.weights");
+
+            _net = CvDnn.ReadNetFromDarknet(cfg_path, weight_path);
             _net.SetPreferableBackend(Backend.OPENCV);
             _net.SetPreferableTarget(Target.OPENCL);
+
+            //get output layer name
+            outNames = _net.GetUnconnectedOutLayersNames();
+            //create mats for output layer
+            outs = outNames.Select(_ => new Mat()).ToArray();
         }
 
         public static DetectionAlgorithm Instance
@@ -45,18 +57,21 @@ namespace CameraManager.Track
             // Preprocess the image
             using Mat blob = CvDnn.BlobFromImage(image, 1 / 255.0, new Size(416, 416), new Scalar(0, 0, 0), true, false);
 
-            // Set the input to the network
-            _net.SetInput(blob);
+            ////get output layer name
+            //var outNames = _net.GetUnconnectedOutLayersNames();
+            ////create mats for output layer
+            //var outs = outNames.Select(_ => new Mat()).ToArray();
+            lock (_lock)
+            {
+                // Set the input to the network
+                _net.SetInput(blob);
 
-            // Forward pass the network
-            //using Mat output = _net.Forward();
+                // Forward pass the network
+                //using Mat output = _net.Forward();
 
-            //get output layer name
-            var outNames = _net.GetUnconnectedOutLayersNames();
-            //create mats for output layer
-            var outs = outNames.Select(_ => new Mat()).ToArray();
-
-            _net.Forward(outs, outNames);
+                _net.Forward(outs, outNames);
+                
+            }
 
             //get result from all output
             var boxes = GetResult(outs, image, 0.5f, 0.3f);
@@ -127,7 +142,7 @@ namespace CameraManager.Track
                             .ColRange(prefix, prob.Cols), out _, out Point max);
                         var classes = max.X;
 
-                        if (classes != 0)
+                        if (classes != personClassId)
                         {
                             continue;
                         }

@@ -14,13 +14,13 @@ namespace CameraManager
 
             // 将 JSON 配置写入临时文件
             string configFile = "camera.json";
-
-            CameraApiService cameraApiService = new CameraApiService("http://192.168.1.220:44311/api/services/app/");
+            string baseUri = "http://192.168.1.220:44311/api/services/app/";
+            //CameraApiService cameraApiService = new CameraApiService("http://192.168.1.220:44311/api/services/app/");
             // 创建 ConfigFileCameraDataSource 实例
             //ICameraDataSource cameraDataSource = new ConfigFileCameraDataSource(configFile);
-            ICameraDataSource cameraDataSource = new DatabaseCameraDataSource(cameraApiService);
+            //ICameraDataSource cameraDataSource = new DatabaseCameraDataSource(cameraApiService);
             // 创建 CameraController 实例
-            CameraController cameraController = new CameraController(cameraDataSource, cameraApiService);
+            CameraController cameraController = new CameraController(baseUri);
 
             // 测试打印摄像机详情
             cameraController.PrintCameraDetails();
@@ -59,8 +59,9 @@ namespace CameraManager
             #endregion 
 
             // ptz controll test
-            // test device id: Cam-9ac923
+            // test device id: Cam-c9c786
             string deviceId = "Cam-2bfd09";
+            string deviceId2 = "Cam-c9c786";
             //cameraController.PrepareToMove(deviceId);
             //cameraController.Move(deviceId,15,30, 12);
 
@@ -82,7 +83,11 @@ namespace CameraManager
             //videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
 
             cameraController.CreateVideoProcess(deviceId);
+            //cameraController.CreateVideoProcess(deviceId2);
+
             #endregion
+
+            Console.ReadKey();
         }
     }
 }

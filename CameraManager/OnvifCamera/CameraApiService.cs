@@ -72,6 +72,9 @@ namespace CameraManager.OnvifCamera
                         cameraInfo.VideoWidth = profile.VideoEncoderConfiguration.VideoWidth;
                         cameraInfo.VideoHeight = profile.VideoEncoderConfiguration.VideoHeight;
                     }
+
+                    // TODO: video stream uri
+
                 }
                 catch (Exception)
                 {

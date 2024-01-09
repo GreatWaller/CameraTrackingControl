@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace CameraManager
 {
-    internal class CameraController
+    public class CameraController
     {
         private List<CameraInfo> cameras; // 摄像机列表
         private ICameraDataSource cameraDataSource;
@@ -21,25 +21,25 @@ namespace CameraManager
 
         #region detect and track
         // Create an instance of the detection algorithm
-        private readonly IDetectionAlgorithm detectionAlgorithm = new DetectionAlgorithm();
+        private readonly IDetectionAlgorithm detectionAlgorithm;
 
         private Dictionary<string,VideoProcessingService> videoProcessServices = new Dictionary<string, VideoProcessingService>();
 
-        
+        private const float MinAngleToMove = 0.75f;
         #endregion
 
-        public CameraController(ICameraDataSource _cameraDataSource, CameraApiService _cameraApiService)
+        public CameraController(string baseUrl)
         {
-            cameraApiService = _cameraApiService;
-            this.cameraDataSource = _cameraDataSource;
-
-            cameras = _cameraDataSource.LoadCameras();
+            cameraApiService = new CameraApiService(baseUrl);
+            detectionAlgorithm = new DetectionAlgorithm();
+            this.cameraDataSource = new DatabaseCameraDataSource(cameraApiService);
+            cameras = cameraDataSource.LoadCameras();
 
 
         }
 
         // 根据船只坐标找到最近的摄像机
-        public CameraInfo FindNearestCamera(GeoLocation shipLocation)
+        private CameraInfo FindNearestCamera(GeoLocation shipLocation)
         {
             CameraInfo nearestCamera = null;
             double minDistance = double.MaxValue;
@@ -96,7 +96,7 @@ namespace CameraManager
         #region calculate by pixel，no need for now
 
         // 计算物体在相机图像中的位置
-        public PointF CalculateObjectPositionInImage(Vector3 objectCoordinates, Camera camera)
+        private PointF CalculateObjectPositionInImage(Vector3 objectCoordinates, Camera camera)
         {
             // 将物体坐标从世界坐标系转换到相机坐标系
             var objectCoordinatesInCameraCoordinates = camera.CameraRotationMatrix * objectCoordinates;
@@ -112,7 +112,7 @@ namespace CameraManager
         }
 
         // 计算相机需要水平转动的角度
-        public double CalculateHorizontalPanAngle(Vector3 objectPositionInImage, Camera camera)
+        private double CalculateHorizontalPanAngle(Vector3 objectPositionInImage, Camera camera)
         {
             // 计算相机需要水平转动的角度
             var horizontalPanAngle = Math.Atan2(objectPositionInImage.X, camera.FocalLength) * 180 / Math.PI - camera.HorizontalPanAngle;
@@ -122,7 +122,7 @@ namespace CameraManager
 
 
         // 计算相机需要垂直转动的角度
-        public double CalculateVerticalTiltAngle(Vector3 objectPositionInImage, Camera camera)
+        private double CalculateVerticalTiltAngle(Vector3 objectPositionInImage, Camera camera)
         {
             // 计算相机需要垂直转动的角度
             var verticalTiltAngle = Math.Atan2(objectPositionInImage.Y, camera.FocalLength) * 180 / Math.PI - camera.VerticalTiltAngle;
@@ -133,13 +133,13 @@ namespace CameraManager
 
         #region core
 
-        public Vector3 CalculateObjectPositionToCamera(Vector3 objectCoordinates, CameraInfo camera)
+        private Vector3 CalculateObjectPositionToCamera(Vector3 objectCoordinates, CameraInfo camera)
         {
             // 将物体坐标从世界坐标系转换到相机坐标系
             var objectCoordinatesInCameraCoordinates = camera.CameraRotationMatrix * objectCoordinates;
             return objectCoordinatesInCameraCoordinates;
         }
-        public float CalculateHorizontalPanAngle(Vector3 objectCoordinates, CameraInfo camera)
+        private float CalculateHorizontalPanAngle(Vector3 objectCoordinates, CameraInfo camera)
         {
             // 计算相机需要水平转动的角度
             var horizontalPanAngle = MathF.Atan2(objectCoordinates.Y, objectCoordinates.X) * 180 / MathF.PI - camera.HomePanToNorth;
@@ -150,7 +150,7 @@ namespace CameraManager
             }
             return horizontalPanAngle;
         }
-        public float CalculateVerticalTiltAngle(Vector3 objectCoordinates, CameraInfo camera)
+        private float CalculateVerticalTiltAngle(Vector3 objectCoordinates, CameraInfo camera)
         {
             // 计算相机需要垂直转动的角度
             var verticalTiltAngle = MathF.Atan2(objectCoordinates.Z, objectCoordinates.Y) * 180 / MathF.PI - camera.HomeTiltToHorizon;
@@ -182,6 +182,10 @@ namespace CameraManager
                 moveStatus.TryAdd(deviceId, new MoveStatus(status));
                 Console.WriteLine($"Current Stutus: [Zoom: {moveStatus[deviceId].CameraStatus.ZoomPosition}]");
             }
+            else
+            {
+                return false;
+            }
 
             return true;
         }
@@ -193,7 +197,10 @@ namespace CameraManager
                 return false;
             }
 
-            PrepareToMove(deviceId);
+            if (!PrepareToMove(deviceId))
+            {
+                return false;
+            }
 
             var status = cameraApiService.MoveToAbsolutePositionInDegree(deviceId, panInDegree, tiltInDegree, zoomLevel);
             if (status != null && status.Error == "NO error")
@@ -205,14 +212,22 @@ namespace CameraManager
 
         public bool MoveRelative(string deviceId, float panInDegree, float tiltInDegree, int zoomLevel)
         {
+            Console.WriteLine($"Move relatively: {panInDegree}, {tiltInDegree}, {zoomLevel}");
+            if ( MathF.Abs(panInDegree) < MinAngleToMove & MathF.Abs(tiltInDegree) < MinAngleToMove)
+            {
+                return false;
+            }
             if (string.IsNullOrEmpty(deviceId))
             {
                 return false;
             }
 
-            PrepareToMove(deviceId);
+            if (!PrepareToMove(deviceId))
+            {
+                return false;
+            }
 
-            var status = cameraApiService.MoveToRelativePositionInDegree(deviceId, panInDegree, tiltInDegree, zoomLevel);
+            var status = cameraApiService.MoveToRelativePositionInDegree(deviceId, panInDegree*1f, tiltInDegree, zoomLevel);
             if (status != null && status.Error == "NO error")
             {
                 moveStatus[deviceId].CameraStatus = status;
@@ -252,7 +267,7 @@ namespace CameraManager
             return result;
         }
 
-        public bool PointToTargetByGeo(GeoLocation location)
+        private bool PointToTargetByGeo(GeoLocation location)
         {
             /* 1 find the nearest camera
              * 2 point camera at target
@@ -334,18 +349,72 @@ namespace CameraManager
             return new Vector3(HorizontalRotationAngle, VerticalRotationAngle, 0);
         }
 
-        public void CreateVideoProcess(string deviceId)
+        public bool CreateVideoProcess(string deviceId)
         {
+
+            if (!PrepareToMove(deviceId))
+            {
+                return false;
+            }
+
+            if (videoProcessServices.ContainsKey(deviceId))
+            {
+                return true;
+            }
             // Create an instance of the video processing service
             VideoProcessingService videoProcessingService = new VideoProcessingService(deviceId, detectionAlgorithm);
             videoProcessingService.DetectionEvent += TrackingByImage;
 
             videoProcessServices.Add(deviceId, videoProcessingService);
 
-            videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
+            ThreadPool.QueueUserWorkItem( obj =>
+            {
+                videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
+
+            });
+            return true;
+        }
+        public bool CreateVideoProcess(string deviceId, double x, double y)
+        {
+            if (!PrepareToMove(deviceId))
+            {
+                return false;
+            }
+
+            if (videoProcessServices.ContainsKey(deviceId))
+            {
+                return true;
+            }
+
+            // calculate init postion
+            TrackingByImage(deviceId, new Rect2d(x, y,1,1));
+
+            // Create an instance of the video processing service
+            VideoProcessingService videoProcessingService = new VideoProcessingService(deviceId, detectionAlgorithm);
+            videoProcessingService.DetectionEvent += TrackingByImage;
+
+            videoProcessServices.Add(deviceId, videoProcessingService);
+
+            ThreadPool.QueueUserWorkItem(obj =>
+            {
+                videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
+
+            });
+            return true;
         }
 
+        public bool StopVideoProcess(string deviceId)
+        {
+            if (!videoProcessServices.ContainsKey(deviceId))
+            {
+                return false;
+            }
 
+            videoProcessServices[deviceId].Stop();
+            videoProcessServices.Remove(deviceId);
+
+            return true;
+        }
         #endregion
     }
 }
