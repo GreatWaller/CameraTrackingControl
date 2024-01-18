@@ -16,7 +16,7 @@ namespace CameraManager
         private List<CameraInfo> cameras; // 摄像机列表
         private ICameraDataSource cameraDataSource;
 
-        private readonly CameraApiService cameraApiService;
+        private readonly ICameraService cameraApiService;
         private Dictionary<string,MoveStatus> moveStatus = new Dictionary<string,MoveStatus>();
 
         #region detect and track
@@ -25,17 +25,15 @@ namespace CameraManager
 
         private Dictionary<string,VideoProcessingService> videoProcessServices = new Dictionary<string, VideoProcessingService>();
 
-        private const float MinAngleToMove = 0.75f;
+        private const float MinAngleToMove = 1.0f;
         #endregion
 
         public CameraController(string baseUrl)
         {
-            cameraApiService = new CameraApiService(baseUrl);
+            cameraApiService = new OnvifCameraService(baseUrl);
             detectionAlgorithm = new DetectionAlgorithm();
             this.cameraDataSource = new DatabaseCameraDataSource(cameraApiService);
             cameras = cameraDataSource.LoadCameras();
-
-
         }
 
         // 根据船只坐标找到最近的摄像机
@@ -159,11 +157,11 @@ namespace CameraManager
             return verticalTiltAngle;
         }
 
-        private int CalculateZoomLevel(Vector3 objectPositionToCamera, CameraInfo cameraInfo)
+        private float CalculateZoomLevel(Vector3 objectPositionToCamera, CameraInfo cameraInfo)
         {
             var F = cameraInfo.VideoWidth * objectPositionToCamera.X / cameraInfo.Fy / objectPositionToCamera.Z;
             F = Math.Clamp(MathF.Abs(F), 1f, cameraInfo.MaxZoomLevel);
-            return (int)F;
+            return F;
         }
 
         #endregion
@@ -177,7 +175,8 @@ namespace CameraManager
             }
 
             var status = cameraApiService.GetCurrentStatus(deviceId);
-            if (status != null && status.Error== "NO error")
+            // TODO: to decomment
+            if (status != null && status.Error == "NO error")
             {
                 moveStatus.TryAdd(deviceId, new MoveStatus(status));
                 Console.WriteLine($"Current Stutus: [Zoom: {moveStatus[deviceId].CameraStatus.ZoomPosition}]");
@@ -190,7 +189,7 @@ namespace CameraManager
             return true;
         }
 
-        public bool MoveAbsolute(string deviceId, float panInDegree, float tiltInDegree, int zoomLevel)
+        public bool MoveAbsolute(string deviceId, float panInDegree, float tiltInDegree, float zoomLevel)
         {
             if (string.IsNullOrEmpty(deviceId))
             {
@@ -210,10 +209,15 @@ namespace CameraManager
             return true;
         }
 
-        public bool MoveRelative(string deviceId, float panInDegree, float tiltInDegree, int zoomLevel)
+        public bool MoveRelative(string deviceId, float panInDegree, float tiltInDegree, float zoomLevel)
         {
+            if (panInDegree == 0f && tiltInDegree ==0f && zoomLevel ==0)
+            {
+                return true;
+            }
             Console.WriteLine($"Move relatively: {panInDegree}, {tiltInDegree}, {zoomLevel}");
-            if ( MathF.Abs(panInDegree) < MinAngleToMove & MathF.Abs(tiltInDegree) < MinAngleToMove)
+            var zoomPosition = moveStatus[deviceId].CameraStatus.ZoomPosition;
+            if (MathF.Abs(panInDegree) < MinAngleToMove/ zoomPosition & MathF.Abs(tiltInDegree) < MinAngleToMove/ zoomPosition & zoomLevel ==0)
             {
                 return false;
             }
@@ -324,11 +328,15 @@ namespace CameraManager
         public void TrackingByImage(string deviceId, Rect2d detection)
         {
             Vector3 delta = AdjustCameraPose(deviceId, detection);
-            MoveRelative(deviceId, delta.X, delta.Y, (int)delta.Z);
+            MoveRelative(deviceId, delta.X, delta.Y, delta.Z);
         }
         public Vector3 AdjustCameraPose(string deviceId, Rect2d detection)
         {
             var cameraInfo = cameras.FirstOrDefault(camera => camera.DeviceId == deviceId);
+            if (cameraInfo ==null)
+            {
+                return new Vector3(0f,0f,0f);
+            }
             var status = moveStatus[deviceId];
 
             return AdjustCameraPoseInternal(detection, cameraInfo, status);
@@ -346,6 +354,20 @@ namespace CameraManager
             var VerticalRotationAngle = MathF.Atan2(offsetY, cameraInfo.FocalLength * status.CameraStatus.ZoomPosition) * 180 / MathF.PI;
 
             // TODO: zoom
+            double frac = detection.Width / cameraInfo.VideoWidth;
+            float zool = 0;
+            // TODO: bbox 触碰边缘时减小zoom level
+            //if (detection.Bottom/(double)cameraInfo.VideoHeight > 0.9 || detection.Top/(double)cameraInfo.VideoHeight<0.1 )
+            //{
+            //    zool -= 1;
+            //}
+            if ( frac > 0.2)
+            {
+                zool += -0.5f;
+            }else if (frac <0.1)
+            {
+                zool += 0.5f;
+            }
             return new Vector3(HorizontalRotationAngle, VerticalRotationAngle, 0);
         }
 
@@ -366,10 +388,15 @@ namespace CameraManager
             videoProcessingService.DetectionEvent += TrackingByImage;
 
             videoProcessServices.Add(deviceId, videoProcessingService);
-
+            var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == deviceId);
+            if (cameraInfo == null)
+            {
+                return false;
+            }
             ThreadPool.QueueUserWorkItem( obj =>
             {
-                videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
+                //videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
+                videoProcessingService.ProcessVideo(cameraInfo.StreamUri);
 
             });
             return true;
@@ -387,7 +414,7 @@ namespace CameraManager
             }
 
             // calculate init postion
-            TrackingByImage(deviceId, new Rect2d(x, y,1,1));
+            TrackingByImage(deviceId, new Rect2d(x, y,100,100));
 
             // Create an instance of the video processing service
             VideoProcessingService videoProcessingService = new VideoProcessingService(deviceId, detectionAlgorithm);
@@ -395,9 +422,15 @@ namespace CameraManager
 
             videoProcessServices.Add(deviceId, videoProcessingService);
 
+            videoProcessServices.Add(deviceId, videoProcessingService);
+            var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == deviceId);
+            if (cameraInfo == null)
+            {
+                return false;
+            }
             ThreadPool.QueueUserWorkItem(obj =>
             {
-                videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
+                videoProcessingService.ProcessVideo(cameraInfo.StreamUri);
 
             });
             return true;

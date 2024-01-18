@@ -11,9 +11,9 @@ namespace CameraManager
 {
     internal class DatabaseCameraDataSource : ICameraDataSource
     {
-        private readonly CameraApiService cameraApiService;
+        private readonly ICameraService cameraApiService;
 
-        public DatabaseCameraDataSource(CameraApiService _cameraApiService)
+        public DatabaseCameraDataSource(ICameraService _cameraApiService)
         {
             cameraApiService= _cameraApiService;
         }

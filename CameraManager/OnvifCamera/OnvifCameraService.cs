@@ -8,15 +8,13 @@ using System.Threading.Tasks;
 
 namespace CameraManager.OnvifCamera
 {
-    internal class CameraApiService: ICameraService
+    internal class OnvifCameraService: ICameraService
     {
-        private string baseUri;
         private readonly RestApiClient restApiClient;
         private List<CameraInfo> cameraInfos;
 
-        public CameraApiService(string baseUri)
+        public OnvifCameraService(string baseUri)
         {
-            this.baseUri = baseUri;
             restApiClient = new RestApiClient(baseUri);
             cameraInfos = new List<CameraInfo>();
         }
@@ -24,8 +22,6 @@ namespace CameraManager.OnvifCamera
         public List<CameraInfo> GetAllDevices()
         {
             cameraInfos.Clear();
-            //var cameraInfos = new List<CameraInfo>();
-
             // 从数据库加载摄像机信息
             // get all devices
             // find username and password
@@ -40,56 +36,79 @@ namespace CameraManager.OnvifCamera
                 Console.WriteLine("Network connection failed.");
                 return cameraInfos;
             }
-            var deviceRoot = JsonConvert.DeserializeObject<DeviceRoot>(devicesJson);
-            if (deviceRoot == null)
+            var root = JsonConvert.DeserializeObject<RootResult<ResultData<DeviceItem>>>(devicesJson);
+            if (root == null)
             {
                 return cameraInfos;
             }
-            foreach (var device in deviceRoot?.Result?.Items)
+            foreach (var device in root?.Result?.Items)
             {
                 var cameraInfo = new CameraInfo();
                 cameraInfo.DeviceId = device.DeviceId;
                 cameraInfo.Ipv4Address = device.Ipv4Address;
-                cameraInfo.Longitude = device.Longitude;
-                cameraInfo.Latitude = device.Latitude;
-                cameraInfo.HomePanToNorth = device.HomePanToNorth;
-                cameraInfo.HomeTiltToHorizon = device.HomeTiltToHorizon;
-                cameraInfo.MinPanDegree = device.MinPanDegree;
-                cameraInfo.MaxPanDegree = device.MaxPanDegree;
-                cameraInfo.MinTiltDegree = device.MinTiltDegree;
-                cameraInfo.MaxTiltDegree = device.MaxTiltDegree;
-                cameraInfo.MinZoomLevel = device.MinZoomLevel;
-                cameraInfo.MaxZoomLevel = device.MaxZoomLevel;
-                cameraInfo.FocalLength = 4.8f;
+
+                var profile = device.Profiles.FirstOrDefault();
+                if (profile != null)
+                {
+                    
+                    //cameraInfo.Longitude = Longitude;
+                    //cameraInfo.Latitude = profile.PtzParams.Latitude;
+
+                    cameraInfo.HomePanToNorth = profile.PtzParams.HomePanToNorth;
+                    cameraInfo.HomeTiltToHorizon = profile.PtzParams.HomeTiltToHorizon;
+                    cameraInfo.MinPanDegree = profile.PtzParams.MinPanDegree;
+                    cameraInfo.MaxPanDegree = profile.PtzParams.MaxPanDegree;
+                    cameraInfo.MinTiltDegree = profile.PtzParams.MinTiltDegree;
+                    cameraInfo.MaxTiltDegree = profile.PtzParams.MaxTiltDegree;
+                    cameraInfo.MinZoomLevel = profile.PtzParams.MinZoomLevel;
+                    cameraInfo.MaxZoomLevel = profile.PtzParams.MaxZoomLevel <= 0 ? 33 : profile.PtzParams.MaxZoomLevel;
+                    cameraInfo.FocalLength = 4.8f;
+                    cameraInfo.CCDWidth = profile.PtzParams.SensorWidth <= 0? 5.4f: profile.PtzParams.SensorWidth;
+                    cameraInfo.CCDHeight = profile.PtzParams.SensorHeight <= 0 ? 4.0f : profile.PtzParams.SensorHeight;
+
+                    cameraInfo.ProfileToken = profile.Token;
+                    cameraInfo.VideoHeight = profile.VideoHeight;
+                    cameraInfo.VideoWidth = profile.VideoWidth;
+
+                    cameraInfo.StreamUri = profile.StreamUri;
+
+                }
 
                 try
                 {
-                    var deviceInfoJson = restApiClient.GetAsync("DeviceCredential/GetCredentialByDeviceId?deviceId=" + device.DeviceId);
-                    var deviceInfo = JsonConvert.DeserializeObject<DeviceInfo>(deviceInfoJson.Result);
+                    var installationJson = restApiClient.GetAsync("Device/GetInstallationParams?deviceId=" + device.DeviceId).Result;
+                    var installation = JsonConvert.DeserializeObject<RootResult<InstallationData>>(installationJson)?.Result;
+                    if (installation == null)
+                    {
+                        continue;
+                    }
+                    cameraInfo.Longitude = installation.Longitude;
+                    cameraInfo.Latitude = installation.Latitude;
+                    cameraInfo.Altitude = installation.Altitude;
+                    cameraInfo.Roll = installation.Roll;
+                    cameraInfo.Pitch = installation.Pitch;
+                    cameraInfo.Yaw = installation.Yaw;
+
+
+                    var deviceInfoJson = restApiClient.GetAsync("Device/GetDeviceCredential?deviceId=" + device.DeviceId);
+                    var deviceInfo = JsonConvert.DeserializeObject<RootResult<DeviceInfo>>(deviceInfoJson.Result);
                     if (deviceInfo != null)
                     {
-                        cameraInfo.UserName = deviceInfo.Username;
-                        cameraInfo.Password = deviceInfo.Password;
-                    }
+                        cameraInfo.UserName = deviceInfo.Result.Username;
+                        cameraInfo.Password = deviceInfo.Result.Password;
 
-                    var profileJson = restApiClient.GetAsync("Media/GetProfilesByDeviceId?deviceId=" + device.DeviceId);
-                    var profiles = JsonConvert.DeserializeObject<DeviceProfile>(profileJson.Result);
-                    var profile = profiles?.Result.FirstOrDefault(p => p.Name == "mainStream");
-                    if (profile != null)
-                    {
-                        cameraInfo.ProfileToken = profile.Token;
-                        cameraInfo.VideoWidth = profile.VideoEncoderConfiguration.VideoWidth;
-                        cameraInfo.VideoHeight = profile.VideoEncoderConfiguration.VideoHeight;
+                        if(cameraInfo.UserName != null)
+                        {
+                            var rtsp = $"rtsp://{cameraInfo.UserName}:{cameraInfo.Password}@{cameraInfo.StreamUri.Substring(7)}";
+                            cameraInfo.StreamUri=rtsp;
+                        }
                     }
-
-                    // TODO: video stream uri
 
                 }
                 catch (Exception)
                 {
                     Trace.TraceError($"ERROR DeviceId: {device.DeviceId}");
                     continue;
-                    //throw;
                 }
 
                 cameraInfos.Add(cameraInfo);
@@ -115,9 +134,7 @@ namespace CameraManager.OnvifCamera
             }
             var parameters = new Dictionary<string, string>()
             {
-                { "host", cameraInfo.Ipv4Address },
-                {"username", cameraInfo.UserName },
-                {"password", cameraInfo.Password },
+                {"deviceId", deviceId },
                 {"profileToken", cameraInfo.ProfileToken }
             };
 
@@ -143,7 +160,7 @@ namespace CameraManager.OnvifCamera
         }
 
         public CameraStatus MoveToAbsolutePositionInDegree(string deviceId, float panInDegree, float tiltInDegree, float zoomLevel
-            , float panSpeed=1, float tiltSpeed =1, float zoomSpeed=1)
+            , float panSpeed = 1, float tiltSpeed = 1, float zoomSpeed = 1)
         {
             var cameraStatus = new CameraStatus();
 
@@ -160,12 +177,10 @@ namespace CameraManager.OnvifCamera
             }
             var parameters = new Dictionary<string, string>()
             {
-                { "host", cameraInfo.Ipv4Address },
-                {"username", cameraInfo.UserName },
-                {"password", cameraInfo.Password },
+                {"deviceId", deviceId },
                 {"profileToken", cameraInfo.ProfileToken },
-                {"panInDegree", panInDegree.ToString()}, 
-                {"tiltInDegree", tiltInDegree.ToString()}, 
+                {"panInDegree", panInDegree.ToString()},
+                {"tiltInDegree", tiltInDegree.ToString()},
                 {"zoomInLevel",zoomLevel.ToString()},
                 {"panSpeed",panSpeed.ToString()},
                 {"tiltSpeed",tiltSpeed.ToString()},
@@ -176,7 +191,7 @@ namespace CameraManager.OnvifCamera
 
             try
             {
-                var jsonString = restApiClient.PostAsync(uri,string.Empty).Result;
+                var jsonString = restApiClient.PostAsync(uri, string.Empty).Result;
                 // 将JSON字符串反序列化为ApiResponse对象
                 cameraStatus = JsonConvert.DeserializeObject<CameraStatus>(jsonString);
 
@@ -210,9 +225,7 @@ namespace CameraManager.OnvifCamera
             }
             var parameters = new Dictionary<string, string>()
             {
-                { "host", cameraInfo.Ipv4Address },
-                {"username", cameraInfo.UserName },
-                {"password", cameraInfo.Password },
+                {"deviceId", deviceId },
                 {"profileToken", cameraInfo.ProfileToken },
                 {"panInDegree", panInDegree.ToString()},
                 {"tiltInDegree", tiltInDegree.ToString()},

@@ -156,6 +156,12 @@ namespace CameraManager.Track
                             var width = prob.At<float>(i, 2) * w;
                             var height = prob.At<float>(i, 3) * h;
 
+                            //var topLeftX= centerX - width/2;
+                            //if (topLeftX < 0) 
+                            //    topLeftX = 0;
+                            //var topLeftY= centerY - height/2;
+                            //if (topLeftY < 0)
+                            //    topLeftY = 0;
                             if (!nms)
                             {
                                 // draw result (if don't use NMSBoxes)
@@ -180,13 +186,15 @@ namespace CameraManager.Track
 
             //Console.WriteLine($"NMSBoxes drop {confidences.Count - indices.Length} overlapping result.");
 
+            var nmsBoxes = new List<Rect2d>();
             foreach (var i in indices)
             {
                 var box = boxes[i];
+                nmsBoxes.Add(box);
                 Draw(image, classIds[i], confidences[i], probabilities[i], box.X, box.Y, box.Width, box.Height);
             }
 
-            return boxes;
+            return nmsBoxes;
         }
 
         /// <summary>

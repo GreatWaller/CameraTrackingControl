@@ -16,6 +16,7 @@ namespace CameraManager
         public RestApiClient(string baseUri, string token = null)
         {
             var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
 
             // 如果需要，可以在这里添加身份验证信息
             if (!string.IsNullOrEmpty(token))
@@ -30,6 +31,7 @@ namespace CameraManager
             };
 
             _baseUri = baseUri;
+
         }
 
         public async Task<string> GetAsync(string resource)

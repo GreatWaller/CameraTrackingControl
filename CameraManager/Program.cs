@@ -14,7 +14,7 @@ namespace CameraManager
 
             // 将 JSON 配置写入临时文件
             string configFile = "camera.json";
-            string baseUri = "http://192.168.1.220:44311/api/services/app/";
+            string baseUri = "https://192.168.1.40:44311/api/services/app/";
             //CameraApiService cameraApiService = new CameraApiService("http://192.168.1.220:44311/api/services/app/");
             // 创建 ConfigFileCameraDataSource 实例
             //ICameraDataSource cameraDataSource = new ConfigFileCameraDataSource(configFile);
@@ -60,7 +60,7 @@ namespace CameraManager
 
             // ptz controll test
             // test device id: Cam-c9c786
-            string deviceId = "Cam-2bfd09";
+            string deviceId = "Cam-7de4e6c1";
             string deviceId2 = "Cam-c9c786";
             //cameraController.PrepareToMove(deviceId);
             //cameraController.Move(deviceId,15,30, 12);

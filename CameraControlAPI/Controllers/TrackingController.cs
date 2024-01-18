@@ -9,7 +9,7 @@ namespace CameraControlAPI.Controllers
     public class TrackingController : ControllerBase
     {
         private readonly ILogger<TrackingController> _logger;
-        private const string baseUri = "http://192.168.1.220:44311/api/services/app/";
+        private const string baseUri = "https://192.168.1.40:44311/api/services/app/";
         private static CameraController cameraController = new CameraController(baseUri);
 
         public TrackingController(ILogger<TrackingController> logger)
@@ -17,34 +17,22 @@ namespace CameraControlAPI.Controllers
             _logger = logger;
         }
 
-        //// GET: api/<CameraController>
-        //[HttpGet]
-        //public IEnumerable<string> Get()
-        //{
-        //    return new string[] { "value1", "value2" };
-        //}
-
-        //// GET api/<CameraController>/5
-        //[HttpGet("{id}")]
-        //public string Get(int id)
-        //{
-        //    return "value";
-        //}
-
-        //// POST api/<CameraController>
-        //[HttpPost]
-        //public void Post([FromBody] string deviceId)
-        //{
-
-        //}
-
         [HttpPost("Start")]
-        public void Start(string deviceId)
+        public IActionResult Start(string deviceId)
         {
-            if (!cameraController.CreateVideoProcess(deviceId))
+            bool res = false;
+            try
             {
-
+                res = cameraController.CreateVideoProcess(deviceId);
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseResult<string>.FailResult(ex.Message));
+                //return BadRequest(ex.Message);
+            }
+            return res?Ok(ResponseResult<string>.SuccessResult("Start a video process successfully")):
+                Ok(ResponseResult<string>.ErrorResult("Something wrong"));
+            //return Ok("Start a video process successfully");
         }
         [HttpPost("Click")]
         public IActionResult Click([FromBody] TrackingInfo trackingInfo)
@@ -67,7 +55,8 @@ namespace CameraControlAPI.Controllers
                 return BadRequest("X and Y coordinates cannot be negative.");
             }
             // Return a success message.
-            return Ok("Tracking info saved successfully.");
+            return Ok(ResponseResult<string>.SuccessResult("Tracking info saved successfully"));
+            //return Ok("Tracking info saved successfully.");
         }
 
         [HttpPost("Stop")]
