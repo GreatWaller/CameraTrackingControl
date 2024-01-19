@@ -133,9 +133,13 @@ namespace CameraManager.Track
 
                         }
 
-                        var detection = detections.Count > 1 ? FindSimilarTarget(frame, detections) : detections[0];
+                        (var isSame, var detection) = detections.Count > 1 ? FindSimilarTarget(frame, detections) : (true,detections[0]);
 
                         Console.WriteLine($"[Detection: {detection.X}, {detection.Y}]");
+                        if (!isSame)
+                        {
+                            return;
+                        }
                         isCameraMoving = true;
                         DetectionEvent.Invoke(deviceId, detection);
                         isCameraMoving = false;
@@ -160,7 +164,7 @@ namespace CameraManager.Track
             //captureThread.Join();
         }
 
-        private Rect2d FindSimilarTarget(Mat image, List<Rect2d> detections)
+        private (bool,Rect2d) FindSimilarTarget(Mat image, List<Rect2d> detections)
         {
             double l = 0;
             int i = 0;
@@ -173,10 +177,10 @@ namespace CameraManager.Track
                 //Cv2.ImWrite("subimage.jpg", detectionMat);
                 using var target = lastTarget.Clone();
                 // Resize and crop the images
-                (Mat resizedCroppedImage1, Mat resizedImage2) = ResizeAndCropImages(detectionMat, target);
-                var similarity = CompareMSSIM(resizedCroppedImage1, resizedImage2);
+                //(Mat resizedCroppedImage1, Mat resizedImage2) = ResizeAndCropImages(detectionMat, target);
+                //var similarity = CompareMSSIM(resizedCroppedImage1, resizedImage2);
 
-                //var similarity = CompareMSSIM(detectionMat, target);
+                var similarity = CompareHistAllChannel(detectionMat, target);
                 Console.WriteLine(similarity);
                 if (similarity > l)
                 {
@@ -186,7 +190,8 @@ namespace CameraManager.Track
             }
             Console.WriteLine("=================");
 
-            return detections[i];
+            bool isSame= l>0.3?true:false;
+            return (isSame, detections[i]);
         }
 
         internal void Stop()
