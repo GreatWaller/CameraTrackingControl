@@ -36,13 +36,15 @@ namespace CameraManager.Track
 
         private Mat? lastTarget = null;
 
+        private ImageSimilarityCalculator imageSimilarityCalculator;
+
         public VideoProcessingService(string _deviceId, IDetectionAlgorithm detectionAlgorithm)
         {
             deviceId = _deviceId;
             _detectionAlgorithm = detectionAlgorithm;
             _frameQueue = new Queue<Mat>();
 
-            
+            imageSimilarityCalculator = new ImageSimilarityCalculator();
         }
         private void CaptureFrames(string videoPath)
         {
@@ -172,16 +174,17 @@ namespace CameraManager.Track
             for (int j = 0; j < detections.Count; j++)
             {
                 var item = detections[j];
-                using var detectionMat = SubImage(image, item);
+                var detectionMat = SubImage(image, item);
 
                 //Cv2.ImWrite("subimage.jpg", detectionMat);
-                using var target = lastTarget.Clone();
+                var target = lastTarget.Clone();
                 // Resize and crop the images
                 //(Mat resizedCroppedImage1, Mat resizedImage2) = ResizeAndCropImages(detectionMat, target);
                 //var similarity = CompareMSSIM(resizedCroppedImage1, resizedImage2);
 
-                var similarity = CompareHistAllChannel(detectionMat, target);
-                Console.WriteLine(similarity);
+                //var similarity = ComputeSimilarity(detectionMat, target);
+
+                var similarity = imageSimilarityCalculator.CalculateSimilarity(detectionMat, target);
                 if (similarity > l)
                 {
                     l = similarity;
@@ -190,7 +193,7 @@ namespace CameraManager.Track
             }
             Console.WriteLine("=================");
 
-            bool isSame= l>0.3?true:false;
+            bool isSame= l>0.9?true:false;
             return (isSame, detections[i]);
         }
 
@@ -423,23 +426,23 @@ namespace CameraManager.Track
                 surf.DetectAndCompute(img1, null, out keypoints1, descriptors1);
                 surf.DetectAndCompute(img2, null, out keypoints2, descriptors2);
 
-                if(descriptors1.Rows ==0 ||  descriptors2.Rows == 0)
+                if(descriptors1.Rows <10 ||  descriptors2.Rows <10)
                 {
                     return 0;
                 }
                 // Match descriptors between the two images
                 using (var matcher = new FlannBasedMatcher())
                 {
-                    var matches = matcher.Match(descriptors1, descriptors2);
+                    var matches = matcher.KnnMatch(descriptors1, descriptors2,2);
 
                     // Filter matches using the Lowe's ratio test
-                    const double ratioThresh = 0.5;
+                    const double ratioThresh = 0.7;
                     var goodMatches = new List<DMatch>();
                     foreach (var m in matches)
                     {
-                        if (m.Distance < ratioThresh)
+                        if (m[0].Distance < ratioThresh * m[1].Distance)
                         {
-                            goodMatches.Add(m);
+                            goodMatches.Add(m[0]);
                         }
                     }
 
