@@ -15,8 +15,7 @@ using System.Reflection.Emit;
 
 namespace CameraManager.Track
 {
-    internal delegate void DetectionEventHandler(string deviceId, Rect2d detection);
-    internal class VideoProcessingService
+    internal class OpencvVideoProcessingService: IVideoProcessingService
     {
         private string deviceId;
         private readonly IDetectionAlgorithm _detectionAlgorithm;
@@ -39,7 +38,7 @@ namespace CameraManager.Track
 
         private ImageSimilarityCalculator imageSimilarityCalculator;
 
-        public VideoProcessingService(string _deviceId, IDetectionAlgorithm detectionAlgorithm)
+        public OpencvVideoProcessingService(string _deviceId, IDetectionAlgorithm detectionAlgorithm)
         {
             deviceId = _deviceId;
             _detectionAlgorithm = detectionAlgorithm;
@@ -65,7 +64,7 @@ namespace CameraManager.Track
             capture.Release();
         }
 
-        public void ProcessVideo(string videoPath)
+        public void Start(string videoPath)
         {
             // 启动捕获线程
             //Thread captureThread = new Thread(() => CaptureFrames(videoPath));
@@ -201,7 +200,7 @@ namespace CameraManager.Track
             return (isSame, detections[i]);
         }
 
-        internal void Stop()
+        public void Stop()
         {
             shouldStop=true;
         }

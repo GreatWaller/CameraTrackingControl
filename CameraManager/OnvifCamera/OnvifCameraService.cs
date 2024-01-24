@@ -71,7 +71,7 @@ namespace CameraManager.OnvifCamera
                     cameraInfo.VideoWidth = profile.VideoWidth;
 
                     cameraInfo.StreamUri = profile.StreamUri;
-
+                    cameraInfo.ServerStreamUri = profile.StreamUri;
                 }
 
                 try
@@ -97,13 +97,13 @@ namespace CameraManager.OnvifCamera
                         cameraInfo.UserName = deviceInfo.Result.Username;
                         cameraInfo.Password = deviceInfo.Result.Password;
 
-                        if (cameraInfo.UserName != null)
-                        {
-                            var rtsp = $"rtsp://{cameraInfo.UserName}:{cameraInfo.Password}@{cameraInfo.StreamUri.Substring(7)}";
-                            cameraInfo.StreamUri = rtsp;
-                            cameraInfo.ServerStreamUri = rtsp;
+                        //if (cameraInfo.UserName != null)
+                        //{
+                        //    var rtsp = $"rtsp://{cameraInfo.UserName}:{cameraInfo.Password}@{cameraInfo.StreamUri.Substring(7)}";
+                        //    cameraInfo.StreamUri = rtsp;
+                        //    cameraInfo.ServerStreamUri = rtsp;
 
-                        }
+                        //}
                     }
 
                     //var parameters = new Dictionary<string, string>()
