@@ -44,5 +44,6 @@ namespace CameraManager.OnvifCamera
         public float CCDHeight { get; set; } = 4.0f;
 
         public string StreamUri { get; set; }
+        public string ServerStreamUri {  get; set; }
     }
 }

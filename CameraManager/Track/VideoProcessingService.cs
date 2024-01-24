@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using OpenCvSharp.ImgHash;
 using System.Runtime.InteropServices;
 using OpenCvSharp.XFeatures2D;
+using System.Reflection.Emit;
 
 namespace CameraManager.Track
 {
@@ -174,10 +175,10 @@ namespace CameraManager.Track
             for (int j = 0; j < detections.Count; j++)
             {
                 var item = detections[j];
-                var detectionMat = SubImage(image, item);
+                using var detectionMat = SubImage(image, item);
 
                 //Cv2.ImWrite("subimage.jpg", detectionMat);
-                var target = lastTarget.Clone();
+                using var target = lastTarget.Clone();
                 // Resize and crop the images
                 //(Mat resizedCroppedImage1, Mat resizedImage2) = ResizeAndCropImages(detectionMat, target);
                 //var similarity = CompareMSSIM(resizedCroppedImage1, resizedImage2);
@@ -185,6 +186,9 @@ namespace CameraManager.Track
                 //var similarity = ComputeSimilarity(detectionMat, target);
 
                 var similarity = imageSimilarityCalculator.CalculateSimilarity(detectionMat, target);
+
+                //Cv2.PutText(image, similarity.ToString(), new Point(item.X,item.Y), HersheyFonts.HersheyTriplex, 0.5, Scalar.Red);
+
                 if (similarity > l)
                 {
                     l = similarity;
@@ -193,7 +197,7 @@ namespace CameraManager.Track
             }
             Console.WriteLine("=================");
 
-            bool isSame= l>0.9?true:false;
+            bool isSame= l>0.88?true:false;
             return (isSame, detections[i]);
         }
 

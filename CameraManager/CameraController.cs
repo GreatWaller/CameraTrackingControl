@@ -396,7 +396,7 @@ namespace CameraManager
             ThreadPool.QueueUserWorkItem( obj =>
             {
                 //videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
-                videoProcessingService.ProcessVideo(cameraInfo.StreamUri);
+                videoProcessingService.ProcessVideo(cameraInfo.ServerStreamUri);
 
             });
             return true;
@@ -430,7 +430,7 @@ namespace CameraManager
             }
             ThreadPool.QueueUserWorkItem(obj =>
             {
-                videoProcessingService.ProcessVideo(cameraInfo.StreamUri);
+                videoProcessingService.ProcessVideo(cameraInfo.ServerStreamUri);
 
             });
             return true;
