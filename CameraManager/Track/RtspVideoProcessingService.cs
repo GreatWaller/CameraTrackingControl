@@ -1,4 +1,5 @@
-﻿using CameraManager.RTSP;
+﻿using CameraManager.OnvifCamera;
+using CameraManager.RTSP;
 using OpenCvSharp;
 using RTSP.RawFramesDecoding;
 using RTSP.RawFramesDecoding.DecodedFrames;
@@ -20,13 +21,17 @@ namespace CameraManager.Track
     {
         private const string RtspPrefix = "rtsp://";
         private const string HttpPrefix = "http://";
-        public string DeviceAddress { get; set; } = "rtsp://192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1";
-        public string Login { get; set; } = "admin";
-        public string Password { get; set; } = "CS@202304";
+        //public string DeviceAddress { get; set; } = "rtsp://192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1";
+        //public string Login { get; set; } = "admin";
+        //public string Password { get; set; } = "CS@202304";
+
+        private readonly CameraInfo cameraInfo;
 
         private readonly RtspVideoProcessingBase rtspVideoProcessingBase;
 
         public event DetectionEventHandler DetectionEvent;
+
+        private readonly IDetectionAlgorithm _detectionAlgorithm;
 
 
         #region transform
@@ -37,26 +42,52 @@ namespace CameraManager.Track
         private object _lock = new object();
         #endregion
 
-        public RtspVideoProcessingService(string deviecId) 
+        private bool isCameraMoving = false;
+        private Mat? lastTarget = null;
+
+
+        public RtspVideoProcessingService(CameraInfo cameraInfo, IDetectionAlgorithm detectionAlgorithm)
         {
+            this.cameraInfo = cameraInfo;
             _transformParameters = new TransformParameters(RectangleF.Empty,
-                    new System.Drawing.Size(_width, _height),
-                    ScalingPolicy.Stretch, PixelFormat.Bgra32, ScalingQuality.FastBilinear);
-            _image = new Mat(_height, _width, MatType.CV_8UC4);
+                    new System.Drawing.Size(cameraInfo.VideoWidth, cameraInfo.VideoHeight),
+                    ScalingPolicy.Stretch, PixelFormat.Bgr24, ScalingQuality.FastBilinear);
+            _image = new Mat(cameraInfo.VideoHeight, cameraInfo.VideoWidth, MatType.CV_8UC3);
 
             rtspVideoProcessingBase = new RtspVideoProcessingBase();
             rtspVideoProcessingBase.FrameReceived += RtspVideoProcessingBase_FrameReceived;
-            
+            _detectionAlgorithm = detectionAlgorithm;
         }
 
         private void RtspVideoProcessingBase_FrameReceived(object? sender, IDecodedVideoFrame decodedVideoFrame)
         {
-            Console.WriteLine("Frame Received");
-
+            if (isCameraMoving)
+            {
+                //Console.WriteLine($"**************Moving...************");
+                return;
+            }
+            //Console.WriteLine($"[{DateTime.Now.ToString()}] Frame Received");
             decodedVideoFrame.TransformTo(_image.DataStart, (int)_image.Step(), _transformParameters);
-            
+            //Cv2.ImWrite("rtspframe.jpg", _image);
 
-            Cv2.ImWrite("rtspframe.jpg",_image);
+            ThreadPool.QueueUserWorkItem(work =>
+            {
+                List<Rect2d> detections = _detectionAlgorithm.DetectObjects(_image);
+
+                if (detections.Count > 0)
+                {
+                    var detection = detections.OrderBy(p => Math.Abs(p.X - _image.Width / 2)).First();
+
+                    //Console.WriteLine($"[Detection: {detection.X}, {detection.Y}]");
+
+                    isCameraMoving = true;
+                    DetectionEvent.Invoke(cameraInfo.DeviceId, detection);
+                    isCameraMoving = false;
+                }
+            });
+
+            //Cv2.ImShow("RTSP", _image);
+            //Cv2.WaitKey(1);
         }
 
         public void Start(string videoPath)
@@ -66,7 +97,7 @@ namespace CameraManager.Track
                 Trace.TraceError("StreamUri is null");
                 return;
             }
-            string address = DeviceAddress;
+            string address = videoPath;
 
             if (!address.StartsWith(RtspPrefix) && !address.StartsWith(HttpPrefix))
                 address = RtspPrefix + address;
@@ -77,7 +108,7 @@ namespace CameraManager.Track
                 return;
             }
 
-            var credential = new NetworkCredential(Login, Password);
+            var credential = new NetworkCredential(cameraInfo.UserName, cameraInfo.Password);
 
             var connectionParameters = !string.IsNullOrEmpty(deviceUri.UserInfo) ? new ConnectionParameters(deviceUri) :
                 new ConnectionParameters(deviceUri, credential);
@@ -85,7 +116,7 @@ namespace CameraManager.Track
             connectionParameters.RtpTransport = RtpTransportProtocol.TCP;
             connectionParameters.CancelTimeout = TimeSpan.FromSeconds(1);
 
-            
+
             rtspVideoProcessingBase.Start(connectionParameters);
             //_mainWindowModel.StatusChanged += MainWindowModelOnStatusChanged;
         }

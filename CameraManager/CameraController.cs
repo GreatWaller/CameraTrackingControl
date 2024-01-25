@@ -383,18 +383,18 @@ namespace CameraManager
             {
                 return true;
             }
-            // Create an instance of the video processing service
-            //OpencvVideoProcessingService videoProcessingService = new OpencvVideoProcessingService(deviceId, detectionAlgorithm);
-            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(deviceId);
-
-            videoProcessingService.DetectionEvent += TrackingByImage;
-
-            videoProcessServices.Add(deviceId, videoProcessingService);
             var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == deviceId);
             if (cameraInfo == null)
             {
                 return false;
             }
+            // Create an instance of the video processing service
+            //OpencvVideoProcessingService videoProcessingService = new OpencvVideoProcessingService(deviceId, detectionAlgorithm);
+            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(cameraInfo, detectionAlgorithm);
+
+            videoProcessingService.DetectionEvent += TrackingByImage;
+
+            videoProcessServices.Add(deviceId, videoProcessingService);
             //ThreadPool.QueueUserWorkItem( obj =>
             //{
                 //videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
@@ -418,20 +418,20 @@ namespace CameraManager
             // calculate init postion
             TrackingByImage(deviceId, new Rect2d(x, y,100,100));
 
+            var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == deviceId);
+            if (cameraInfo == null)
+            {
+                return false;
+            }
             // Create an instance of the video processing service
             //IVideoProcessingService videoProcessingService = new OpencvVideoProcessingService(deviceId, detectionAlgorithm);
-            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(deviceId);
+            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(cameraInfo, detectionAlgorithm);
 
             videoProcessingService.DetectionEvent += TrackingByImage;
 
             videoProcessServices.Add(deviceId, videoProcessingService);
 
             videoProcessServices.Add(deviceId, videoProcessingService);
-            var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == deviceId);
-            if (cameraInfo == null)
-            {
-                return false;
-            }
             ThreadPool.QueueUserWorkItem(obj =>
             {
                 videoProcessingService.Start(cameraInfo.ServerStreamUri);
