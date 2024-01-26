@@ -34,6 +34,10 @@ namespace CameraManager
             detectionAlgorithm = new DetectionAlgorithm();
             this.cameraDataSource = new DatabaseCameraDataSource(cameraApiService);
             cameras = cameraDataSource.LoadCameras();
+
+            int coreCount = Environment.ProcessorCount;
+            ThreadPool.SetMinThreads(1, 1);
+            ThreadPool.SetMaxThreads(coreCount, coreCount);
         }
 
         // 根据船只坐标找到最近的摄像机
@@ -215,7 +219,7 @@ namespace CameraManager
             {
                 return true;
             }
-            Console.WriteLine($"Move relatively: {panInDegree}, {tiltInDegree}, {zoomLevel}");
+            Console.WriteLine($"To Move relatively: {panInDegree}, {tiltInDegree}, {zoomLevel}");
             var zoomPosition = moveStatus[deviceId].CameraStatus.ZoomPosition;
             if (MathF.Abs(panInDegree) < MinAngleToMove/ zoomPosition & MathF.Abs(tiltInDegree) < MinAngleToMove/ zoomPosition & zoomLevel ==0)
             {

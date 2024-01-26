@@ -18,17 +18,17 @@ namespace CameraManager.Track
             this.net1 = CvDnn.ReadNetFromOnnx(modelPath);
             this.net2 = CvDnn.ReadNetFromOnnx(modelPath);
 
-            net1.SetPreferableBackend(Backend.OPENCV);
-            net1.SetPreferableTarget(Target.OPENCL);
+            net1.SetPreferableBackend(Backend.CUDA);
+            net1.SetPreferableTarget(Target.CUDA);
 
-            net2.SetPreferableBackend(Backend.OPENCV);
-            net2.SetPreferableTarget(Target.OPENCL);
+            net2.SetPreferableBackend(Backend.CUDA);
+            net2.SetPreferableTarget(Target.CUDA);
         }
 
         private Mat ExtractFeature(Mat img, Net net)
         {
             // 将图像转换为blob
-            Mat blob = CvDnn.BlobFromImage(img, 1.0, new Size(224, 224), new Scalar(0.406, 0.456,0.485), true, false);
+            using Mat blob = CvDnn.BlobFromImage(img, 1.0, new Size(224, 224), new Scalar(0.406, 0.456,0.485), true, false);
 
             // 设置网络的输入
             net.SetInput(blob);
