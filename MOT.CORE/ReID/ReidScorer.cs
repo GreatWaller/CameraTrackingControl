@@ -67,16 +67,25 @@ namespace MOT.CORE.ReID
             }
 
             int lastBatchAppearancesCount = detectedBounds.Length % _reidModel.BatchSize;
-
+            //Console.WriteLine($"[ReID Predict] lastBatchAppearancesCount original: {lastBatchAppearancesCount}");
             if (lastBatchAppearancesCount == 0)
                 lastBatchAppearancesCount = _reidModel.BatchSize;
-
+            //Console.WriteLine($"[ReID Predict] lastBatchAppearancesCount original: {lastBatchAppearancesCount}");
+            //Console.WriteLine($"[ReID Predict] ModelOutputs: {modelOutputs.Length}");
             for (int k = 0; k < lastBatchAppearancesCount; k++)
             {
-                float[] parsing = modelOutputs[batchCount - 1].AsSpan<float>().Slice(k * _reidModel.OutputVectorSize, _reidModel.OutputVectorSize).ToArray();
-                Vector appearance = new Vector(ref parsing);
-                appearance.Normalize();
-                appearances.Add(appearance);
+                try
+                {
+                    float[] parsing = modelOutputs[batchCount - 1].AsSpan<float>().Slice(k * _reidModel.OutputVectorSize, _reidModel.OutputVectorSize).ToArray();
+                    Vector appearance = new Vector(ref parsing);
+                    appearance.Normalize();
+                    appearances.Add(appearance);
+                }
+                catch (Exception ex)
+                {
+
+                }
+                
             }
 
             return appearances;

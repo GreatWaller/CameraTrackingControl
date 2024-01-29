@@ -1,5 +1,6 @@
 ﻿using CameraManager.OnvifCamera;
 using CameraManager.RTSP;
+using OpenCvSharp;
 using RTSP.RawFramesDecoding;
 using RTSP.RawFramesDecoding.DecodedFrames;
 using RtspClientSharpCore;
@@ -66,6 +67,25 @@ namespace CameraManager.Track
             try
             {
                 var tracks = tracker.Track(frame);
+                foreach ( var track in tracks )
+                {
+                    Console.Write($"Track Id: {track.Id};");
+                }
+
+                //if (tracks.Count > 0)
+                //{
+                //    ThreadPool.QueueUserWorkItem(work =>
+                //    {
+                //        var target = tracks.OrderByDescending(p => p.Id).FirstOrDefault();
+                //        var box = target.CurrentBoundingBox;
+                //        Rect2d detection = new Rect2d((double)(box.X + box.Width / 2), (double)(box.Y + box.Height / 2), box.Width, box.Height);
+
+                //        isCameraMoving = true;
+                //        DetectionEvent.Invoke(cameraInfo.DeviceId, detection);
+                //        isCameraMoving = false;
+                //    });
+                //    Console.WriteLine($"================================================");
+                //}
 
             }
             catch (Exception ex)

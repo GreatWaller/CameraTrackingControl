@@ -48,6 +48,10 @@ namespace MOT.CORE.Matchers.Deep
         public override IReadOnlyList<ITrack> Run(Bitmap frame, float targetConfidence, params DetectionObjectType[] detectionObjectTypes)
         {
             IPrediction[] detectedObjects = _predictor.Predict(frame, targetConfidence, detectionObjectTypes).ToArray();
+            if (detectedObjects.Length == 0)
+            {
+                return new List<ITrack>();
+            }
             Vector[] appearances = _appearanceExtractor.Predict(frame, detectedObjects).ToArray();
 
             if (_trackers.Count == 0)

@@ -183,7 +183,7 @@ namespace CameraManager
             if (status != null && status.Error == "NO error")
             {
                 moveStatus.TryAdd(deviceId, new MoveStatus(status));
-                Console.WriteLine($"Current Stutus: [Zoom: {moveStatus[deviceId].CameraStatus.ZoomPosition}]");
+                //Console.WriteLine($"Current Stutus: [Zoom: {moveStatus[deviceId].CameraStatus.ZoomPosition}]");
             }
             else
             {
