@@ -69,7 +69,7 @@ namespace CameraManager.Track
                 var tracks = tracker.Track(frame);
                 foreach ( var track in tracks )
                 {
-                    Console.Write($"Track Id: {track.Id};");
+                    Console.WriteLine($"**********************************************************************************[Track Id: {track.Id}]");
                 }
 
                 if (tracks.Count > 0)
@@ -84,7 +84,6 @@ namespace CameraManager.Track
                         DetectionEvent.Invoke(cameraInfo.DeviceId, detection);
                         isCameraMoving = false;
                     });
-                    //Console.WriteLine($"================================================");
                 }
 
             }

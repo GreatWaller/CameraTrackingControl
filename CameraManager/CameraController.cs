@@ -162,7 +162,8 @@ namespace CameraManager
 
         private float CalculateZoomLevel(Vector3 objectPositionToCamera, CameraInfo cameraInfo)
         {
-            var F = cameraInfo.VideoWidth * objectPositionToCamera.X / cameraInfo.Fy / objectPositionToCamera.Z;
+            //var F = cameraInfo.VideoWidth * objectPositionToCamera.X / cameraInfo.Fy / objectPositionToCamera.Z;
+            var F = cameraInfo.CCDHeight * objectPositionToCamera.Y / cameraInfo.FocalLength / objectPositionToCamera.Z;
             F = Math.Clamp(MathF.Abs(F), 1f, cameraInfo.MaxZoomLevel);
             return F;
         }
@@ -371,7 +372,7 @@ namespace CameraManager
             {
                 zool += 0.5f;
             }
-            return new Vector3(HorizontalRotationAngle, VerticalRotationAngle, 0);
+            return new Vector3(HorizontalRotationAngle, VerticalRotationAngle, zool);
         }
 
         public bool CreateVideoProcess(string deviceId)
