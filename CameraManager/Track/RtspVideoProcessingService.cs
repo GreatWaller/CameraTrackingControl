@@ -53,12 +53,12 @@ namespace CameraManager.Track
 
         private void RtspVideoProcessingBase_FrameReceived(object? sender, IDecodedVideoFrame decodedVideoFrame)
         {
+            Console.WriteLine($"[{DateTime.Now.ToString()}] Frame Received");
             if (isCameraMoving)
             {
                 //Console.WriteLine($"**************Moving...************");
                 return;
             }
-            Console.WriteLine($"[{DateTime.Now.ToString()}] Frame Received");
             _bitmapData = _bitmap.LockBits(new Rectangle(0, 0, _bitmap.Width, _bitmap.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, _bitmap.PixelFormat);
             decodedVideoFrame.TransformTo(_bitmapData.Scan0, _bitmapData.Stride, _transformParameters);
             var frame = (Bitmap)_bitmap.Clone();
@@ -72,20 +72,20 @@ namespace CameraManager.Track
                     Console.Write($"Track Id: {track.Id};");
                 }
 
-                //if (tracks.Count > 0)
-                //{
-                //    ThreadPool.QueueUserWorkItem(work =>
-                //    {
-                //        var target = tracks.OrderByDescending(p => p.Id).FirstOrDefault();
-                //        var box = target.CurrentBoundingBox;
-                //        Rect2d detection = new Rect2d((double)(box.X + box.Width / 2), (double)(box.Y + box.Height / 2), box.Width, box.Height);
+                if (tracks.Count > 0)
+                {
+                    ThreadPool.QueueUserWorkItem(work =>
+                    {
+                        var target = tracks.OrderByDescending(p => p.Id).FirstOrDefault();
+                        var box = target.CurrentBoundingBox;
+                        Rect2d detection = new Rect2d((double)(box.X + box.Width / 2), (double)(box.Y + box.Height / 2), box.Width, box.Height);
 
-                //        isCameraMoving = true;
-                //        DetectionEvent.Invoke(cameraInfo.DeviceId, detection);
-                //        isCameraMoving = false;
-                //    });
-                //    Console.WriteLine($"================================================");
-                //}
+                        isCameraMoving = true;
+                        DetectionEvent.Invoke(cameraInfo.DeviceId, detection);
+                        isCameraMoving = false;
+                    });
+                    //Console.WriteLine($"================================================");
+                }
 
             }
             catch (Exception ex)

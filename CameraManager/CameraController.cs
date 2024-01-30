@@ -31,7 +31,6 @@ namespace CameraManager
         public CameraController(string baseUrl)
         {
             cameraApiService = new OnvifCameraService(baseUrl);
-            detectionAlgorithm = new DetectionAlgorithm();
             this.cameraDataSource = new DatabaseCameraDataSource(cameraApiService);
             cameras = cameraDataSource.LoadCameras();
 
