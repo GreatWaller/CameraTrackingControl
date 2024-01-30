@@ -61,7 +61,6 @@ namespace CameraManager
             // ptz controll test
             // test device id: Cam-c9c786
             string deviceId = "Cam-7de4e6c1";
-            string deviceId2 = "Cam-c9c786";
             //cameraController.PrepareToMove(deviceId);
             //cameraController.Move(deviceId,15,30, 12);
 

@@ -15,18 +15,20 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace CameraManager.Track
 {
-    internal class Tracker
+    internal class Tracker: IDisposable
     {
         private MatcherOption matcherOption;
         private float targetConfidence;
-        Matcher matcher;
+        private Matcher matcher;
 
-        public Tracker()
+        public Tracker(string configPath="config.json")
         {
-            matcherOption = new MatcherOption();
+            matcherOption = ReadMatcherOptionFromJson(configPath);
+            
             matcher = ConstructMatcherFromOptions(matcherOption);
             float targetConfidence = float.Clamp(matcherOption.TargetConfidence, 0.0f, 1.0f);
         }
@@ -35,8 +37,6 @@ namespace CameraManager.Track
         public IReadOnlyList<ITrack> Track(Bitmap frame)
         {
             IReadOnlyList<ITrack> tracks = matcher.Run(frame, targetConfidence, DetectionObjectType.Person);
-
-
             return tracks;
         }
 
@@ -110,5 +110,28 @@ namespace CameraManager.Track
 
             return appearanceExtractor;
         }
+
+        public static MatcherOption ReadMatcherOptionFromJson(string json)
+        {
+            try
+            {
+                var option = JsonConvert.DeserializeObject<MatcherOption>(File.ReadAllText(json));
+                if (option == null)
+                {
+                    option = new MatcherOption();
+                }
+                return option;
+            }
+            catch (Exception ex)
+            {
+                return new MatcherOption();
+            }
+        }
+
+        public void Dispose()
+        {
+            matcher.Dispose();
+        }
+
     }
 }

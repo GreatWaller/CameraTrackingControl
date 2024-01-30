@@ -393,15 +393,13 @@ namespace CameraManager
                 return false;
             }
             // Create an instance of the video processing service
-            //OpencvVideoProcessingService videoProcessingService = new OpencvVideoProcessingService(deviceId, detectionAlgorithm);
-            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(cameraInfo, detectionAlgorithm);
+            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(cameraInfo);
 
             videoProcessingService.DetectionEvent += TrackingByImage;
 
             videoProcessServices.Add(deviceId, videoProcessingService);
             //ThreadPool.QueueUserWorkItem( obj =>
             //{
-                //videoProcessingService.ProcessVideo("rtsp://admin:CS@202304@192.168.1.151:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1");
                 videoProcessingService.Start(cameraInfo.ServerStreamUri);
 
             //});
@@ -429,7 +427,7 @@ namespace CameraManager
             }
             // Create an instance of the video processing service
             //IVideoProcessingService videoProcessingService = new OpencvVideoProcessingService(deviceId, detectionAlgorithm);
-            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(cameraInfo, detectionAlgorithm);
+            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(cameraInfo);
 
             videoProcessingService.DetectionEvent += TrackingByImage;
 

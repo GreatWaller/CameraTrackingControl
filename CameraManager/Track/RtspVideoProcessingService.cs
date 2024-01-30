@@ -35,7 +35,7 @@ namespace CameraManager.Track
 
         private Tracker tracker;
 
-        public RtspVideoProcessingService(CameraInfo cameraInfo, IDetectionAlgorithm detectionAlgorithm)
+        public RtspVideoProcessingService(CameraInfo cameraInfo)
         {
             this.cameraInfo = cameraInfo;
             _transformParameters = new TransformParameters(RectangleF.Empty,
@@ -131,6 +131,7 @@ namespace CameraManager.Track
         public void Stop()
         {
             rtspVideoProcessingBase.Stop();
+            tracker.Dispose();
         }
 
         
