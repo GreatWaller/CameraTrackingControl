@@ -138,6 +138,8 @@ namespace CameraManager.OnvifCamera
 
         public CameraStatus GetCurrentStatus(string deviceId)
         {
+            // TODO: delete
+            deviceId = "Cam-7de4e6c1";
             var cameraStatus = new CameraStatus();
             // host username pw profile
             if (cameraInfos.Count == 0)
@@ -230,6 +232,8 @@ namespace CameraManager.OnvifCamera
             , float panSpeed = 1, float tiltSpeed = 1, float zoomSpeed = 1)
         {
             var cameraStatus = new CameraStatus();
+            // TODO: delete
+            deviceId = "Cam-7de4e6c1";
 
             if (cameraInfos.Count == 0)
             {

@@ -40,6 +40,7 @@ namespace CameraManager.Track
         private bool isLooking =false;
         private int trackId = 0;
         private Rect2d targetBox;
+        private bool isClosing=false;
         #endregion
 
         public RtspVideoProcessingService(CameraInfo cameraInfo)
@@ -60,6 +61,10 @@ namespace CameraManager.Track
 
         private void RtspVideoProcessingBase_FrameReceived(object? sender, IDecodedVideoFrame decodedVideoFrame)
         {
+            if (isClosing)
+            {
+                return;
+            }
             Console.WriteLine($"[{DateTime.Now.ToString()}] Frame Received");
             if (isCameraMoving)
             {
@@ -160,6 +165,7 @@ namespace CameraManager.Track
 
         public void Stop()
         {
+            isClosing = true;
             rtspVideoProcessingBase.Stop();
             tracker.Dispose();
         }

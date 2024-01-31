@@ -387,7 +387,9 @@ namespace CameraManager
             {
                 return true;
             }
-            var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == deviceId);
+            // TODO: delete
+            var tdeviceId = "Cam-7de4e6c1";
+            var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == tdeviceId);
             if (cameraInfo == null)
             {
                 return false;

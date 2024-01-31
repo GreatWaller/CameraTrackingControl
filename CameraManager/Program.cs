@@ -59,7 +59,7 @@ namespace CameraManager
             #endregion 
 
             // ptz controll test
-            // test device id: Cam-c9c786
+            // test device id: Cam-152d66b5, Cam-d8c79ce0
             string deviceId = "Cam-7de4e6c1";
             //cameraController.PrepareToMove(deviceId);
             //cameraController.Move(deviceId,15,30, 12);
