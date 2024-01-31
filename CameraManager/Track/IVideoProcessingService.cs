@@ -11,6 +11,8 @@ namespace CameraManager.Track
     internal interface IVideoProcessingService
     {
         public event DetectionEventHandler DetectionEvent;
+
+        void LookTo(Rect2d box);
         public void Start(string videoPath);
         public void Stop();
     }

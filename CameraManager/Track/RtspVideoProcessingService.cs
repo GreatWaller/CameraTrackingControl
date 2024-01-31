@@ -1,5 +1,6 @@
 ﻿using CameraManager.OnvifCamera;
 using CameraManager.RTSP;
+using MOT.CORE.Matchers.Abstract;
 using OpenCvSharp;
 using RTSP.RawFramesDecoding;
 using RTSP.RawFramesDecoding.DecodedFrames;
@@ -34,6 +35,12 @@ namespace CameraManager.Track
         private bool isCameraMoving = false;
 
         private Tracker tracker;
+
+        #region track a certain target
+        private bool isLooking =false;
+        private int trackId = 0;
+        private Rect2d targetBox;
+        #endregion
 
         public RtspVideoProcessingService(CameraInfo cameraInfo)
         {
@@ -72,11 +79,34 @@ namespace CameraManager.Track
                     Console.WriteLine($"**********************************************************************************[Track Id: {track.Id}]");
                 }
 
+
                 if (tracks.Count > 0)
                 {
                     ThreadPool.QueueUserWorkItem(work =>
                     {
-                        var target = tracks.OrderByDescending(p => p.Id).FirstOrDefault();
+                        ITrack target;
+                        if (isLooking)
+                        {
+                            // find target closest to user click
+                            target = tracks.OrderBy(p =>
+                            {
+                                var box = p.CurrentBoundingBox;
+                                var dx = box.X + box.Width / 2 - targetBox.X;
+                                var dy = box.Y + box.Height / 2 - targetBox.Y;
+                                return dx * dx + dy * dy;
+
+                            }).First();
+
+                            trackId = target.Id;
+                            isLooking = false;
+                        }
+                        else
+                        {
+                            target = tracks.OrderBy(p => MathF.Abs(p.Id - trackId)).First();
+                            //target = tracks.OrderByDescending(p => p.Id).First();
+                        }
+
+
                         var box = target.CurrentBoundingBox;
                         Rect2d detection = new Rect2d((double)(box.X + box.Width / 2), (double)(box.Y + box.Height / 2), box.Width, box.Height);
 
@@ -134,6 +164,10 @@ namespace CameraManager.Track
             tracker.Dispose();
         }
 
-        
+        public void LookTo(Rect2d box)
+        {
+            targetBox = box;
+            isLooking = true;
+        }
     }
 }

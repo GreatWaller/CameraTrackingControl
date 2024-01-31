@@ -50,7 +50,7 @@ namespace CameraControlAPI.Controllers
             }
 
             // tracking
-            if (!cameraController.CreateVideoProcess(trackingInfo.DeviceId, trackingInfo.X, trackingInfo.Y))
+            if (!cameraController.LookTo(trackingInfo.DeviceId, trackingInfo.X, trackingInfo.Y))
             {
                 return BadRequest("X and Y coordinates cannot be negative.");
             }

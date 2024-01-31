@@ -359,7 +359,7 @@ namespace CameraManager
 
             // TODO: zoom
             double frac = detection.Width / cameraInfo.VideoWidth;
-            float zool = 0;
+            float zoom = 0;
             // TODO: bbox 触碰边缘时减小zoom level
             //if (detection.Bottom/(double)cameraInfo.VideoHeight > 0.9 || detection.Top/(double)cameraInfo.VideoHeight<0.1 )
             //{
@@ -367,12 +367,12 @@ namespace CameraManager
             //}
             if ( frac > 0.2)
             {
-                zool += -0.5f;
+                zoom += -0.5f;
             }else if (frac <0.1)
             {
-                zool += 0.5f;
+                zoom += 0.5f;
             }
-            return new Vector3(HorizontalRotationAngle, VerticalRotationAngle, zool);
+            return new Vector3(HorizontalRotationAngle, VerticalRotationAngle, zoom);
         }
 
         public bool CreateVideoProcess(string deviceId)
@@ -405,40 +405,28 @@ namespace CameraManager
             //});
             return true;
         }
-        public bool CreateVideoProcess(string deviceId, double x, double y)
+        public bool LookTo(string deviceId, double x, double y)
         {
-            if (!PrepareToMove(deviceId))
+
+            if (!videoProcessServices.ContainsKey(deviceId))
             {
-                return false;
+                throw new Exception($"Start a tracking job First!!!");
             }
 
-            if (videoProcessServices.ContainsKey(deviceId))
-            {
-                return true;
-            }
+            //var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == deviceId);
+            //if (cameraInfo == null)
+            //{
+            //    return false;
+            //}
 
-            // calculate init postion
-            TrackingByImage(deviceId, new Rect2d(x, y,100,100));
-
-            var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == deviceId);
-            if (cameraInfo == null)
-            {
-                return false;
-            }
             // Create an instance of the video processing service
-            //IVideoProcessingService videoProcessingService = new OpencvVideoProcessingService(deviceId, detectionAlgorithm);
-            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(cameraInfo);
+            IVideoProcessingService videoProcessingService = videoProcessServices[deviceId];
 
-            videoProcessingService.DetectionEvent += TrackingByImage;
+            // init postion
+            var box = new Rect2d(x, y,100,100);
 
-            videoProcessServices.Add(deviceId, videoProcessingService);
-
-            videoProcessServices.Add(deviceId, videoProcessingService);
-            ThreadPool.QueueUserWorkItem(obj =>
-            {
-                videoProcessingService.Start(cameraInfo.ServerStreamUri);
-
-            });
+            videoProcessingService.LookTo(box);
+            
             return true;
         }
 
