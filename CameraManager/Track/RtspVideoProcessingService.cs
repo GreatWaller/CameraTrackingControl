@@ -41,6 +41,8 @@ namespace CameraManager.Track
         private int trackId = 0;
         private Rect2d targetBox;
         private bool isClosing=false;
+        private bool isStillRunning=false;
+        private bool isClosed = false;
         #endregion
 
         public RtspVideoProcessingService(CameraInfo cameraInfo)
@@ -65,6 +67,8 @@ namespace CameraManager.Track
             {
                 return;
             }
+            //isStillRunning = true;
+
             Console.WriteLine($"[{DateTime.Now.ToString()}] Frame Received");
             if (isCameraMoving)
             {
@@ -79,6 +83,8 @@ namespace CameraManager.Track
             try
             {
                 var tracks = tracker.Track(frame);
+                //isStillRunning = false;
+
                 foreach ( var track in tracks )
                 {
                     Console.WriteLine($"**********************************************************************************[Track Id: {track.Id}]");
@@ -114,7 +120,11 @@ namespace CameraManager.Track
 
                         var box = target.CurrentBoundingBox;
                         Rect2d detection = new Rect2d((double)(box.X + box.Width / 2), (double)(box.Y + box.Height / 2), box.Width, box.Height);
-
+                        if (isCameraMoving)
+                        {
+                            Console.WriteLine($"***********************************Moving...*******************************************");
+                            return;
+                        }
                         isCameraMoving = true;
                         DetectionEvent.Invoke(cameraInfo.DeviceId, detection);
                         isCameraMoving = false;
@@ -156,7 +166,7 @@ namespace CameraManager.Track
                 new ConnectionParameters(deviceUri, credential);
 
             connectionParameters.RtpTransport = RtpTransportProtocol.TCP;
-            connectionParameters.CancelTimeout = TimeSpan.FromSeconds(1);
+            connectionParameters.CancelTimeout = TimeSpan.FromSeconds(5);
 
 
             rtspVideoProcessingBase.Start(connectionParameters);
@@ -166,6 +176,7 @@ namespace CameraManager.Track
         public void Stop()
         {
             isClosing = true;
+            Thread.Sleep(500);
             rtspVideoProcessingBase.Stop();
             tracker.Dispose();
         }

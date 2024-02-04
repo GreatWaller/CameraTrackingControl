@@ -128,6 +128,7 @@ namespace RtspClientSharpCore.Rtsp
                         if (result == receiveTask || result.IsCanceled)
                         {
                             await receiveTask;
+                            //Trace.TraceError($"【Internal Break!!!】");
                             break;
                         }
 
@@ -495,6 +496,8 @@ namespace RtspClientSharpCore.Rtsp
 
             while (!token.IsCancellationRequested)
             {
+                //Trace.TraceInformation($"----------------------------------------------【ReceiveInternal Before】");
+
                 TpktPayload payload = await _tpktStream.ReadAsync();
 
                 if (_streamsMap.TryGetValue(payload.Channel, out ITransportStream stream))
@@ -503,7 +506,11 @@ namespace RtspClientSharpCore.Rtsp
                 int ticksNow = Environment.TickCount;
 
                 if (!TimeUtils.IsTimeOver(ticksNow, lastTimeRtcpReportsSent, nextRtcpReportInterval))
+                {
+                    //Trace.TraceInformation($"-----------------------------------------------【ReceiveInternal After】");
                     continue;
+
+                }
 
                 lastTimeRtcpReportsSent = ticksNow;
                 nextRtcpReportInterval = GetNextRtcpReportIntervalMs();

@@ -16,12 +16,10 @@ namespace CameraManager
         private List<CameraInfo> cameras; // 摄像机列表
         private ICameraDataSource cameraDataSource;
 
-        private readonly ICameraService cameraApiService;
+        private readonly Dictionary<string, ICameraService> cameraApiServices= new Dictionary<string, ICameraService>();
         private Dictionary<string,MoveStatus> moveStatus = new Dictionary<string,MoveStatus>();
 
         #region detect and track
-        // Create an instance of the detection algorithm
-        private readonly IDetectionAlgorithm detectionAlgorithm;
 
         private Dictionary<string,IVideoProcessingService> videoProcessServices = new Dictionary<string, IVideoProcessingService>();
 
@@ -30,9 +28,14 @@ namespace CameraManager
 
         public CameraController(string baseUrl)
         {
-            cameraApiService = new OnvifCameraService(baseUrl);
+            var cameraApiService = new OnvifCameraService(baseUrl);
             this.cameraDataSource = new DatabaseCameraDataSource(cameraApiService);
             cameras = cameraDataSource.LoadCameras();
+
+            foreach (var camera in cameras)
+            {
+                cameraApiServices.Add(camera.DeviceId, new OnvifCameraService(baseUrl));
+            }
 
             int coreCount = Environment.ProcessorCount;
             ThreadPool.SetMinThreads(1, 1);
@@ -178,7 +181,7 @@ namespace CameraManager
                 return false;
             }
 
-            var status = cameraApiService.GetCurrentStatus(deviceId);
+            var status = cameraApiServices[deviceId].GetCurrentStatus(deviceId);
             // TODO: to decomment
             if (status != null && status.Error == "NO error")
             {
@@ -205,7 +208,7 @@ namespace CameraManager
                 return false;
             }
 
-            var status = cameraApiService.MoveToAbsolutePositionInDegree(deviceId, panInDegree, tiltInDegree, zoomLevel);
+            var status = cameraApiServices[deviceId].MoveToAbsolutePositionInDegree(deviceId, panInDegree, tiltInDegree, zoomLevel);
             if (status != null && status.Error == "NO error")
             {
                 moveStatus[deviceId].CameraStatus = status;
@@ -219,7 +222,6 @@ namespace CameraManager
             {
                 return true;
             }
-            Console.WriteLine($"To Move relatively: {panInDegree}, {tiltInDegree}, {zoomLevel}");
             var zoomPosition = moveStatus[deviceId].CameraStatus.ZoomPosition;
             if (MathF.Abs(panInDegree) < MinAngleToMove/ zoomPosition & MathF.Abs(tiltInDegree) < MinAngleToMove/ zoomPosition & zoomLevel ==0)
             {
@@ -235,7 +237,8 @@ namespace CameraManager
                 return false;
             }
 
-            var status = cameraApiService.MoveToRelativePositionInDegree(deviceId, panInDegree*1f, tiltInDegree, zoomLevel);
+            Console.WriteLine($"To Move relatively: {panInDegree}, {tiltInDegree}, {zoomLevel}");
+            var status = cameraApiServices[deviceId].MoveToRelativePositionInDegree(deviceId, panInDegree, tiltInDegree, zoomLevel);
             if (status != null && status.Error == "NO error")
             {
                 moveStatus[deviceId].CameraStatus = status;
@@ -388,8 +391,8 @@ namespace CameraManager
                 return true;
             }
             // TODO: delete
-            var tdeviceId = "Cam-7de4e6c1";
-            var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == tdeviceId);
+            //var tdeviceId = "Cam-7de4e6c1";
+            var cameraInfo = cameras.FirstOrDefault(p => p.DeviceId == deviceId);
             if (cameraInfo == null)
             {
                 return false;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
@@ -27,7 +28,7 @@ namespace CameraManager
             _httpClient = new HttpClient(handler)
             {
                 // 设置超时时间
-                Timeout = TimeSpan.FromSeconds(30)
+                Timeout = TimeSpan.FromSeconds(5)
             };
 
             _baseUri = baseUri;
@@ -38,7 +39,9 @@ namespace CameraManager
         {
             try
             {
+                //Trace.TraceInformation("【GetStatus】(Before)");
                 var response = await _httpClient.GetAsync(_baseUri + resource);
+                //Trace.TraceInformation("【GetStatus】[After]");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -62,7 +65,9 @@ namespace CameraManager
             var content = new StringContent(data, Encoding.UTF8, "application/json");
             try
             {
+                //Trace.TraceInformation("【PostMove】(Before)");
                 var response = await _httpClient.PostAsync(_baseUri + resource, content);
+                //Trace.TraceInformation("【PostMove】[After]");
 
                 if (response.IsSuccessStatusCode)
                 {

@@ -10,6 +10,8 @@ namespace CameraControlAPI.Controllers
     {
         private readonly ILogger<TrackingController> _logger;
         private const string baseUri = "https://192.168.1.40:44311/api/services/app/";
+        //private const string baseUri = "https://localhost:44311/api/services/app/";
+
         private static CameraController cameraController = new CameraController(baseUri);
 
         public TrackingController(ILogger<TrackingController> logger)
