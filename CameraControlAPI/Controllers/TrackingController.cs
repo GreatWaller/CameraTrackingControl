@@ -8,15 +8,19 @@ namespace CameraControlAPI.Controllers
     [ApiController]
     public class TrackingController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly ILogger<TrackingController> _logger;
-        private const string baseUri = "https://192.168.1.40:44311/api/services/app/";
-        //private const string baseUri = "https://localhost:44311/api/services/app/";
+        private string baseUri = "https://192.168.1.40:44311/api/services/app/";
+        //private string baseUri = "https://localhost:44311/api/services/app/";
 
-        private static CameraController cameraController = new CameraController(baseUri);
+        private static CameraController cameraController;
 
-        public TrackingController(ILogger<TrackingController> logger)
+        public TrackingController(ILogger<TrackingController> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
+            baseUri = _configuration["BaseUri"]??baseUri;
+            cameraController = cameraController??new CameraController(baseUri);
         }
 
         [HttpPost("Start")]
@@ -67,5 +71,19 @@ namespace CameraControlAPI.Controllers
             cameraController.StopVideoProcess(deviceId);
         }
 
+        [HttpPost("LookTo")]
+        public IActionResult LookTo([FromBody] GeoLocation location)
+        {
+            // TODO: some validation
+            // eg. only look to south。current location: 32, 118
+            if (location.Latitude > 30)
+            {
+                return Ok(ResponseResult<string>.ErrorResult("Must Face to South"));
+            }
+
+            cameraController.PointToTargetByGeo(location);
+
+            return Ok(ResponseResult<string>.SuccessResult("Ready"));
+        }
     }
 }

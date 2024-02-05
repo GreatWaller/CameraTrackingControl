@@ -146,18 +146,19 @@ namespace CameraManager
         private float CalculateHorizontalPanAngle(Vector3 objectCoordinates, CameraInfo camera)
         {
             // 计算相机需要水平转动的角度
-            var horizontalPanAngle = MathF.Atan2(objectCoordinates.Y, objectCoordinates.X) * 180 / MathF.PI - camera.HomePanToNorth;
+            // 由于自定义的相机坐标系，Y朝正南，需要反向
+            var horizontalPanAngle = MathF.Atan2(-objectCoordinates.Y, objectCoordinates.X) * 180 / MathF.PI - camera.HomePanToNorth;
 
-            if (horizontalPanAngle < 0)
-            {
-                horizontalPanAngle = 360 + horizontalPanAngle;
-            }
+            //if (horizontalPanAngle < 0)
+            //{
+            //    horizontalPanAngle = 360 + horizontalPanAngle;
+            //}
             return horizontalPanAngle;
         }
         private float CalculateVerticalTiltAngle(Vector3 objectCoordinates, CameraInfo camera)
         {
             // 计算相机需要垂直转动的角度
-            var verticalTiltAngle = MathF.Atan2(objectCoordinates.Z, objectCoordinates.Y) * 180 / MathF.PI - camera.HomeTiltToHorizon;
+            var verticalTiltAngle = MathF.Atan2(-objectCoordinates.Z, -objectCoordinates.Y) * 180 / MathF.PI - camera.HomeTiltToHorizon;
 
             verticalTiltAngle = Math.Clamp(verticalTiltAngle, camera.MinTiltDegree, camera.MaxTiltDegree);
             return verticalTiltAngle;
@@ -278,7 +279,7 @@ namespace CameraManager
             return result;
         }
 
-        private bool PointToTargetByGeo(GeoLocation location)
+        public bool PointToTargetByGeo(GeoLocation location)
         {
             /* 1 find the nearest camera
              * 2 point camera at target
@@ -308,21 +309,45 @@ namespace CameraManager
             double c = Math.Sqrt(a * a - b * b);
 
             // Calculate the x, y, and z coordinates
-            double x = (a * Math.Cos(latRad) * Math.Cos(lonRad) + altitude) * 1000; // Convert to meters
-            double y = (a * Math.Cos(latRad) * Math.Sin(lonRad)) * 1000; // Convert to meters
-            double z = ((b * b / a) * Math.Sin(latRad) + altitude) * 1000; // Convert to meters
+            double x = (a * Math.Cos(latRad) * Math.Cos(lonRad) + altitude) ; // Convert to meters
+            double y = (a * Math.Cos(latRad) * Math.Sin(lonRad)) ; // Convert to meters
+            double z = ((b * b / a) * Math.Sin(latRad) + altitude) ; // Convert to meters
 
             // Return the Cartesian coordinates
             return new Vector3((float)x, (float)y, (float)z);
         }
+
+        private static Vector3 ConvertLatLngToEcef(double latitude, double longitude, double altitude)
+        {
+            double a = 6378137.0; // WGS-84 semi-major axis
+            double e2 = 6.69437999014e-3; // WGS-84 first eccentricity squared
+            var lat = DegreeToRadian(latitude);
+            var lon = DegreeToRadian(longitude);
+            var alt = altitude;
+
+            var N = a / Math.Sqrt(1 - e2 * Math.Sin(lat) * Math.Sin(lat));
+
+            var x = (N + alt) * Math.Cos(lat) * Math.Cos(lon);
+            var y = (N + alt) * Math.Cos(lat) * Math.Sin(lon);
+            var z = (N * (1 - e2) + alt) * Math.Sin(lat);
+
+            return new Vector3 { X = (float)x, Y = (float)y, Z = (float)z };
+        }
+
+        private static double DegreeToRadian(double degree)
+        {
+            return degree * Math.PI / 180;
+        }
         public static Vector3 GetRelativeCartesianCoordinates(double latitude1, double longitude1, double altitude1, double latitude2, double longitude2, double altitude2)
         {
             // Convert the two sets of latitude and longitude to Cartesian coordinates
-            Vector3 cartesianCoordinates1 = ConvertLatLngToCartesian(latitude1, longitude1, altitude1);
-            Vector3 cartesianCoordinates2 = ConvertLatLngToCartesian(latitude2, longitude2, altitude2);
+            //Vector3 cartesianCoordinates1 = ConvertLatLngToCartesian(latitude1, longitude1, altitude1);
+            //Vector3 cartesianCoordinates2 = ConvertLatLngToCartesian(latitude2, longitude2, altitude2);
+
+            double[] loc = CoordinateConverter.GetRelativePosition(longitude1, latitude1, longitude2, latitude2);
 
             // Calculate the relative Cartesian coordinates
-            Vector3 relativeCartesianCoordinates = cartesianCoordinates2 - cartesianCoordinates1;
+            Vector3 relativeCartesianCoordinates = new Vector3((float)loc[0], (float)loc[1], (float)(altitude2 - altitude1));
 
             // Return the relative Cartesian coordinates
             return relativeCartesianCoordinates;
@@ -403,11 +428,8 @@ namespace CameraManager
             videoProcessingService.DetectionEvent += TrackingByImage;
 
             videoProcessServices.Add(deviceId, videoProcessingService);
-            //ThreadPool.QueueUserWorkItem( obj =>
-            //{
-                videoProcessingService.Start(cameraInfo.ServerStreamUri);
+            videoProcessingService.Start(cameraInfo.ServerStreamUri);
 
-            //});
             return true;
         }
         public bool LookTo(string deviceId, double x, double y)
