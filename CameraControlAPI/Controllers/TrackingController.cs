@@ -33,8 +33,8 @@ namespace CameraControlAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseResult<string>.FailResult(ex.Message));
-                //return BadRequest(ex.Message);
+                //return BadRequest(ResponseResult<string>.FailResult(ex.Message));
+                return Ok(ResponseResult<string>.ErrorResult(ex.Message));
             }
             return res?Ok(ResponseResult<string>.SuccessResult("Start a video process successfully")):
                 Ok(ResponseResult<string>.ErrorResult("Something wrong"));
@@ -46,29 +46,33 @@ namespace CameraControlAPI.Controllers
             // Check if the device ID is valid.
             if (string.IsNullOrEmpty(trackingInfo.DeviceId))
             {
-                return BadRequest("Device ID cannot be null or empty.");
+                return Ok(ResponseResult<string>.ErrorResult("Device ID cannot be null or empty."));
             }
 
             // Check if the x and y coordinates are valid.
             if (trackingInfo.X < 0 || trackingInfo.Y < 0)
             {
-                return BadRequest("X and Y coordinates cannot be negative.");
+                return Ok(ResponseResult<string>.ErrorResult("X and Y coordinates cannot be negative."));
+
             }
 
             // tracking
             if (!cameraController.LookTo(trackingInfo.DeviceId, trackingInfo.X, trackingInfo.Y))
             {
-                return BadRequest("X and Y coordinates cannot be negative.");
+                return Ok(ResponseResult<string>.ErrorResult("X and Y coordinates cannot be negative."));
+
             }
             // Return a success message.
             return Ok(ResponseResult<string>.SuccessResult("Tracking info saved successfully"));
-            //return Ok("Tracking info saved successfully.");
         }
 
         [HttpPost("Stop")]
-        public void Stop(string deviceId)
+        public IActionResult Stop(string deviceId)
         {
-            cameraController.StopVideoProcess(deviceId);
+            var res = cameraController.StopVideoProcess(deviceId);
+
+            return Ok(ResponseResult<string>.SuccessResult("Stop successfully."));
+
         }
 
         [HttpPost("LookTo")]
