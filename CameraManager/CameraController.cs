@@ -186,7 +186,14 @@ namespace CameraManager
 
             if (status != null && status.Error == "NO error")
             {
-                moveStatus.TryAdd(deviceId, new MoveStatus(status));
+                if (moveStatus.ContainsKey(deviceId))
+                {
+                    moveStatus[deviceId] = new MoveStatus(status);
+                }
+                else
+                {
+                    moveStatus.TryAdd(deviceId, new MoveStatus(status));
+                }
                 //Console.WriteLine($"Current Stutus: [Zoom: {moveStatus[deviceId].CameraStatus.ZoomPosition}]");
             }
             else
@@ -389,7 +396,7 @@ namespace CameraManager
             double frac = detection.Width / cameraInfo.VideoWidth;
             float zoom = 0;
             // TODO: bbox 触碰边缘时减小zoom level
-            //if (detection.Bottom/(double)cameraInfo.VideoHeight > 0.9 || detection.Top/(double)cameraInfo.VideoHeight<0.1 )
+            //if (detection.Bottom/(double)cameraInfo.VideoHeight > 0.95 || detection.Top/(double)cameraInfo.VideoHeight<0.05 )
             //{
             //    zool -= 1;
             //}
