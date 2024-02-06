@@ -90,38 +90,38 @@ namespace CameraManager.OnvifCamera
                     cameraInfo.Yaw = installation.Yaw;
 
 
-                    var deviceInfoJson = restApiClient.GetAsync("Device/GetDeviceCredential?deviceId=" + device.DeviceId);
-                    var deviceInfo = JsonConvert.DeserializeObject<RootResult<DeviceInfo>>(deviceInfoJson.Result);
-                    if (deviceInfo != null)
-                    {
-                        cameraInfo.UserName = deviceInfo.Result.Username;
-                        cameraInfo.Password = deviceInfo.Result.Password;
-
-                        //if (cameraInfo.UserName != null)
-                        //{
-                        //    var rtsp = $"rtsp://{cameraInfo.UserName}:{cameraInfo.Password}@{cameraInfo.StreamUri.Substring(7)}";
-                        //    cameraInfo.StreamUri = rtsp;
-                        //    cameraInfo.ServerStreamUri = rtsp;
-
-                        //}
-                    }
-
-                    //var parameters = new Dictionary<string, string>()
+                    //var deviceInfoJson = restApiClient.GetAsync("Device/GetDeviceCredential?deviceId=" + device.DeviceId);
+                    //var deviceInfo = JsonConvert.DeserializeObject<RootResult<DeviceInfo>>(deviceInfoJson.Result);
+                    //if (deviceInfo != null)
                     //{
-                    //    {"deviceId", device.DeviceId },
-                    //    {"profileToken", cameraInfo.ProfileToken }
-                    //};
+                    //    cameraInfo.UserName = deviceInfo.Result.Username;
+                    //    cameraInfo.Password = deviceInfo.Result.Password;
 
-                    //var uri = restApiClient.BuildUri("Device/GetVideoSources", parameters);
-                    //var videoSourceJson = restApiClient.GetAsync(uri);
-                    //var videoSource = JsonConvert.DeserializeObject<RootResult<VideoSource>>(videoSourceJson.Result);
-                    //if (videoSource != null)
-                    //{
-                    //    cameraInfo.UserName = videoSource.Result.Username;
-                    //    cameraInfo.Password = videoSource.Result.Password;
-                    //    cameraInfo.ServerStreamUri = videoSource.Result.ServerStreamUri;
-                        
+                    //    //if (cameraInfo.UserName != null)
+                    //    //{
+                    //    //    var rtsp = $"rtsp://{cameraInfo.UserName}:{cameraInfo.Password}@{cameraInfo.StreamUri.Substring(7)}";
+                    //    //    cameraInfo.StreamUri = rtsp;
+                    //    //    cameraInfo.ServerStreamUri = rtsp;
+
+                    //    //}
                     //}
+
+                    var parameters = new Dictionary<string, string>()
+                    {
+                        {"deviceId", device.DeviceId },
+                        {"profileToken", cameraInfo.ProfileToken }
+                    };
+
+                    var uri = restApiClient.BuildUri("Device/GetVideoSources", parameters);
+                    var videoSourceJson = restApiClient.GetAsync(uri);
+                    var videoSource = JsonConvert.DeserializeObject<RootResult<VideoSource>>(videoSourceJson.Result);
+                    if (videoSource != null)
+                    {
+                        cameraInfo.UserName = videoSource.Result.Username;
+                        cameraInfo.Password = videoSource.Result.Password;
+                        cameraInfo.ServerStreamUri = videoSource.Result.ServerStreamUri;
+
+                    }
 
                 }
                 catch (Exception)
