@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace CameraManager.OnvifCamera
 {
-    internal class OnvifCameraService: ICameraService
+    internal class OnvifCameraService : ICameraService
     {
         private readonly RestApiClient restApiClient;
         private List<CameraInfo> cameraInfos;
@@ -50,20 +50,16 @@ namespace CameraManager.OnvifCamera
                 var profile = device.Profiles.FirstOrDefault();
                 if (profile != null)
                 {
-                    
-                    //cameraInfo.Longitude = Longitude;
-                    //cameraInfo.Latitude = profile.PtzParams.Latitude;
-
                     cameraInfo.HomePanToNorth = profile.PtzParams.HomePanToNorth;
                     cameraInfo.HomeTiltToHorizon = profile.PtzParams.HomeTiltToHorizon;
                     cameraInfo.MinPanDegree = profile.PtzParams.MinPanDegree;
                     cameraInfo.MaxPanDegree = profile.PtzParams.MaxPanDegree;
                     cameraInfo.MinTiltDegree = profile.PtzParams.MinTiltDegree;
                     cameraInfo.MaxTiltDegree = profile.PtzParams.MaxTiltDegree;
-                    cameraInfo.MinZoomLevel = profile.PtzParams.MinZoomLevel;
+                    cameraInfo.MinZoomLevel = profile.PtzParams.MinZoomLevel <= 0 ? 1 : profile.PtzParams.MinZoomLevel;
                     cameraInfo.MaxZoomLevel = profile.PtzParams.MaxZoomLevel <= 0 ? 33 : profile.PtzParams.MaxZoomLevel;
-                    cameraInfo.FocalLength = 4.8f;
-                    cameraInfo.CCDWidth = profile.PtzParams.SensorWidth <= 0? 5.4f: profile.PtzParams.SensorWidth;
+                    cameraInfo.FocalLength = profile.PtzParams.FocalLength <= 0 ? 4.8f : profile.PtzParams.FocalLength;
+                    cameraInfo.CCDWidth = profile.PtzParams.SensorWidth <= 0 ? 5.4f : profile.PtzParams.SensorWidth;
                     cameraInfo.CCDHeight = profile.PtzParams.SensorHeight <= 0 ? 4.0f : profile.PtzParams.SensorHeight;
 
                     cameraInfo.ProfileToken = profile.Token;
