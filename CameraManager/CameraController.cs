@@ -149,7 +149,7 @@ namespace CameraManager
             }
 
             var status = cameraApiServices[deviceId].GetCurrentStatus(deviceId);
-            // TODO: to decomment
+
             if (status != null && status.Error == "NO error")
             {
                 if (moveStatus.ContainsKey(deviceId))
