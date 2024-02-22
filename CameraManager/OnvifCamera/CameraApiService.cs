@@ -85,7 +85,7 @@ namespace CameraManager.OnvifCamera
                     // TODO: video stream uri
 
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     Trace.TraceError($"ERROR DeviceId: {device.DeviceId}");
                     continue;

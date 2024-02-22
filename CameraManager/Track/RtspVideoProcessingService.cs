@@ -23,6 +23,7 @@ namespace CameraManager.Track
         private readonly RtspVideoProcessingBase rtspVideoProcessingBase;
 
         public event DetectionEventHandler DetectionEvent;
+        public event ImageChangeEventHandler ImageChangeEvent;
 
         #region transform
         private TransformParameters _transformParameters;
@@ -77,8 +78,12 @@ namespace CameraManager.Track
             }
             _bitmapData = _bitmap.LockBits(new Rectangle(0, 0, _bitmap.Width, _bitmap.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, _bitmap.PixelFormat);
             decodedVideoFrame.TransformTo(_bitmapData.Scan0, _bitmapData.Stride, _transformParameters);
-            var frame = (Bitmap)_bitmap.Clone();
             _bitmap.UnlockBits(_bitmapData);
+            //_bitmap?.Save( "frambitmap.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+            var frame = (Bitmap)_bitmap.Clone();
+
+            //var frame2 = (Bitmap)_bitmap.Clone();
+            //ImageChangeEvent?.Invoke(cameraInfo.DeviceId, frame2, new Rect2d());
 
             try
             {
@@ -126,7 +131,9 @@ namespace CameraManager.Track
                             return;
                         }
                         isCameraMoving = true;
-                        DetectionEvent.Invoke(cameraInfo.DeviceId, detection);
+                        DetectionEvent?.Invoke(cameraInfo.DeviceId, detection);
+                        ImageChangeEvent?.Invoke(cameraInfo.DeviceId, frame, detection);
+
                         isCameraMoving = false;
                     });
                 }
@@ -138,7 +145,6 @@ namespace CameraManager.Track
             }
 
 
-            //_bitmap?.Save(Path.Combine("Image", "frambitmap.jpg"), System.Drawing.Imaging.ImageFormat.Jpeg);
 
         }
 

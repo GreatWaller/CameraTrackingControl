@@ -26,6 +26,8 @@ namespace CameraManager
         private const float MinAngleToMove = 1.0f;
         #endregion
 
+        public event ImageChangeEventHandler ImageChangeEvent;
+
         public CameraController(string baseUrl)
         {
             var cameraApiService = new OnvifCameraService(baseUrl);
@@ -188,7 +190,7 @@ namespace CameraManager
             {
                 if (moveStatus.ContainsKey(deviceId))
                 {
-                    moveStatus[deviceId] = new MoveStatus(status);
+                    moveStatus[deviceId].CameraStatus = status;
                 }
                 else
                 {
@@ -433,13 +435,20 @@ namespace CameraManager
             IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(cameraInfo);
 
             videoProcessingService.DetectionEvent += TrackingByImage;
-
+            videoProcessingService.ImageChangeEvent += VideoProcessingService_ImageChangeEvent;
             videoProcessServices.Add(deviceId, videoProcessingService);
-            videoProcessingService.Start(cameraInfo.ServerStreamUri);
+            //cameraInfo.StreamUri = "rtsp://192.168.1.210:554/ch3";
+            videoProcessingService.Start(cameraInfo.StreamUri);
 
             return true;
         }
-        public bool LookTo(string deviceId, double x, double y)
+
+        private void VideoProcessingService_ImageChangeEvent(string deviceId, Bitmap image, Rect2d detection)
+        {
+            ImageChangeEvent?.Invoke(deviceId, image, detection);
+        }
+
+        public bool Click(string deviceId, double x, double y)
         {
 
             if (!videoProcessServices.ContainsKey(deviceId))

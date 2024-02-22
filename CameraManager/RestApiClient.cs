@@ -40,7 +40,7 @@ namespace CameraManager
             try
             {
                 //Trace.TraceInformation("【GetStatus】(Before)");
-                var response = await _httpClient.GetAsync(_baseUri + resource);
+                var response = await _httpClient.GetAsync(_baseUri + resource).ConfigureAwait(false);
                 //Trace.TraceInformation("【GetStatus】[After]");
 
                 if (response.IsSuccessStatusCode)
@@ -66,7 +66,7 @@ namespace CameraManager
             try
             {
                 //Trace.TraceInformation("【PostMove】(Before)");
-                var response = await _httpClient.PostAsync(_baseUri + resource, content);
+                var response = await _httpClient.PostAsync(_baseUri + resource, content).ConfigureAwait(false);
                 //Trace.TraceInformation("【PostMove】[After]");
 
                 if (response.IsSuccessStatusCode)
@@ -89,7 +89,7 @@ namespace CameraManager
             var content = new StringContent(data, Encoding.UTF8, "application/json");
             try
             {
-                var response = await _httpClient.PutAsync(_baseUri + resource, content);
+                var response = await _httpClient.PutAsync(_baseUri + resource, content).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -110,7 +110,7 @@ namespace CameraManager
         {
             try
             {
-                var response = await _httpClient.DeleteAsync(_baseUri + resource);
+                var response = await _httpClient.DeleteAsync(_baseUri + resource).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {

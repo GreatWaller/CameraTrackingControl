@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using RTSP.RawFramesDecoding.DecodedFrames;
 using RTSP.RawFramesDecoding.FFmpeg;
 using RTSP.RawFramesReceiving;
@@ -46,12 +47,11 @@ namespace SimpleRtspPlayer.GUI
 
             _videoDecodersMap.Clear();
         }
-
         private void OnFrameReceived(object sender, RawFrame rawFrame)
         {
             if (!(rawFrame is RawVideoFrame rawVideoFrame))
                 return;
-
+            Trace.TraceInformation($"New frame {rawFrame.Timestamp}: {rawFrame.GetType().Name}");
             FFmpegVideoDecoder decoder = GetDecoderForFrame(rawVideoFrame);
 
             IDecodedVideoFrame decodedFrame = decoder.TryDecode(rawVideoFrame);

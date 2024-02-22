@@ -109,8 +109,8 @@ namespace CameraManager.OnvifCamera
                     };
 
                     var uri = restApiClient.BuildUri("Device/GetVideoSources", parameters);
-                    var videoSourceJson = restApiClient.GetAsync(uri);
-                    var videoSource = JsonConvert.DeserializeObject<RootResult<VideoSource>>(videoSourceJson.Result);
+                    var videoSourceJson = restApiClient.GetAsync(uri).Result;
+                    var videoSource = JsonConvert.DeserializeObject<RootResult<VideoSource>>(videoSourceJson);
                     if (videoSource != null)
                     {
                         cameraInfo.UserName = videoSource.Result.Username;
@@ -120,7 +120,7 @@ namespace CameraManager.OnvifCamera
                     }
 
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     Trace.TraceError($"ERROR DeviceId: {device.DeviceId}");
                     continue;
