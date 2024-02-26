@@ -432,13 +432,13 @@ namespace CameraManager
                 return false;
             }
             // Create an instance of the video processing service
-            IVideoProcessingService videoProcessingService = new RtspVideoProcessingService(cameraInfo);
+            IVideoProcessingService videoProcessingService = new VlcVideoProcessingService(cameraInfo);
 
             videoProcessingService.DetectionEvent += TrackingByImage;
             videoProcessingService.ImageChangeEvent += VideoProcessingService_ImageChangeEvent;
             videoProcessServices.Add(deviceId, videoProcessingService);
-            //cameraInfo.StreamUri = "rtsp://192.168.1.210:554/ch3";
-            videoProcessingService.Start(cameraInfo.StreamUri);
+            //cameraInfo.ServerStreamUri = "rtsp://192.168.1.210:554/ch3";
+            videoProcessingService.Start(cameraInfo.ServerStreamUri);
 
             return true;
         }
