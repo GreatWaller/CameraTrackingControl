@@ -233,7 +233,7 @@ namespace CameraManager
                 return true;
             }
             var zoomPosition = moveStatus[deviceId].CameraStatus.ZoomPosition;
-            if (MathF.Abs(panInDegree) < MinAngleToMove/ zoomPosition & MathF.Abs(tiltInDegree) < MinAngleToMove/ zoomPosition & zoomLevel ==0)
+            if (MathF.Abs(panInDegree) < MinAngleToMove/ zoomPosition & MathF.Abs(tiltInDegree) < MinAngleToMove/ zoomPosition & zoomLevel <= 0.0f && zoomPosition <= 1.5f)
             {
                 return false;
             }
@@ -246,6 +246,7 @@ namespace CameraManager
             {
                 return false;
             }
+
 
             Console.WriteLine($"To Move relatively: {panInDegree}, {tiltInDegree}, {zoomLevel}");
             var status = cameraApiServices[deviceId].MoveToRelativePositionInDegree(deviceId, panInDegree, tiltInDegree, zoomLevel);

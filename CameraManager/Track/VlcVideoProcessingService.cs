@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace CameraManager.Track
 {
@@ -22,11 +23,15 @@ namespace CameraManager.Track
         private bool isCameraMoving = false;
         private Tracker tracker;
 
-        #region track a certain target
+        #region track
         private bool isLooking = false;
         private int trackId = 0;
         private Rect2d targetBox;
         private bool isClosing = false;
+        private const int MaxMissed = 3;
+        private int missedCount = 0;
+        private const int MaxNoDetection = 5;
+        private int noDetectionCount = 0;
         #endregion
 
         private VlcVideoProvider videoProvider;
@@ -53,6 +58,7 @@ namespace CameraManager.Track
                 //Console.WriteLine($"**************Moving...************");
                 return;
             }
+
             var frame = (Bitmap)e.Clone();
 
             try
@@ -88,9 +94,23 @@ namespace CameraManager.Track
                         else
                         {
                             target = tracks.OrderBy(p => MathF.Abs(p.Id - trackId)).First();
-                            //target = tracks.OrderByDescending(p => p.Id).First();
+
                         }
 
+                        if (target.Id != trackId)
+                        {
+                            if (missedCount++ >MaxMissed )
+                            {
+                                missedCount = 0;
+                                trackId = target.Id;
+                                // maybe zoom out a little bit
+                                DetectionEvent?.Invoke(cameraInfo.DeviceId, new Rect2d(cameraInfo.VideoWidth/2, cameraInfo.VideoHeight/2,
+                                    cameraInfo.VideoWidth / 2, cameraInfo.VideoHeight / 2));
+                                Trace.TraceInformation($"**************************************************************Missed and Change target");
+
+                                return;
+                            }
+                        }
 
                         var box = target.CurrentBoundingBox;
                         Rect2d detection = new Rect2d((double)(box.X + box.Width / 2), (double)(box.Y + box.Height / 2), box.Width, box.Height);
@@ -104,6 +124,30 @@ namespace CameraManager.Track
                         ImageChangeEvent?.Invoke(cameraInfo.DeviceId, frame, detection);
 
                         isCameraMoving = false;
+                        
+                    });
+                }
+                else
+                {
+                    ThreadPool.QueueUserWorkItem(work =>
+                    {
+                        ImageChangeEvent?.Invoke(cameraInfo.DeviceId, frame, new Rect2d());
+                        if (noDetectionCount++ > MaxNoDetection)
+                        {
+                            noDetectionCount = 0;
+                            // maybe zoom out a little bit
+                            if (isCameraMoving)
+                            {
+                                Console.WriteLine($"***********************************Moving...*******************************************");
+                                return;
+                            }
+                            isCameraMoving = true;
+                            DetectionEvent?.Invoke(cameraInfo.DeviceId, new Rect2d(cameraInfo.VideoWidth / 2, cameraInfo.VideoHeight / 2,
+                                cameraInfo.VideoWidth / 2, cameraInfo.VideoHeight / 2));
+                            isCameraMoving = false;
+
+                            Trace.TraceInformation($"**************************************************************No detection for 5 frame");
+                        }
                     });
                 }
 

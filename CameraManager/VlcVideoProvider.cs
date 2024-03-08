@@ -179,11 +179,12 @@ namespace CameraManager
 
         private void DisplayCallback(IntPtr opaque, IntPtr picture)
         {
-            FilesToProcess.Enqueue((CurrentMappedFile, CurrentMappedViewAccessor));
-            CurrentMappedFile = null;
-            CurrentMappedViewAccessor = null;
-
-            FrameCounter++;
+            if (FrameCounter++ % 4 ==0)
+            {
+                FilesToProcess.Enqueue((CurrentMappedFile, CurrentMappedViewAccessor));
+                CurrentMappedFile = null;
+                CurrentMappedViewAccessor = null;
+            }
         }
 
 

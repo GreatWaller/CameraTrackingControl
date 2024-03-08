@@ -1,6 +1,5 @@
 ﻿using CameraManager;
 using RTSP.RawFramesDecoding.DecodedFrames;
-using RTSP.RawFramesDecoding;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -63,7 +62,10 @@ namespace TrackingMonitor
                 #region opencv
                 var frame = (Bitmap)bitmap.Clone();
                 var mat = BitmapConverter.ToMat(frame);
-                Draw(mat,1,detection.X, detection.Y, detection.Width, detection.Height);
+                if (detection.Width >=0)
+                {
+                    Draw(mat,1,detection.X, detection.Y, detection.Width, detection.Height);
+                }
                 //OpenCvSharp.Cv2.ImWrite("save.jpg", mat);
                 _writeableBitmap.Lock();
                 try
