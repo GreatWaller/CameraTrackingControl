@@ -76,18 +76,18 @@ namespace CameraControlAPI.Controllers
         }
 
         [HttpPost("LookTo")]
-        public IActionResult LookTo([FromBody] GeoLocation location)
+        public IActionResult LookTo([FromBody] LookingInfo lookingInfo)
         {
             // TODO: some validation
             // eg. only look to south。current location: 32, 118
-            if (location.Latitude > 40)
+            if (lookingInfo.Location.Latitude > 40)
             {
                 return Ok(ResponseResult<string>.ErrorResult("Must Face to South"));
             }
 
-            var res = cameraController.PointToTargetByGeo(location);
+            var res = cameraController.PointToTargetByGeo(lookingInfo.Location, lookingInfo.DeviceId);
 
-            return res ? Ok(ResponseResult<string>.SuccessResult("Ready")): Ok(ResponseResult<string>.ErrorResult("Something wrong"));
+            return res ? Ok(ResponseResult<string>.SuccessResult("Ready")): Ok(ResponseResult<string>.ErrorResult("Something wrong. Please check your device Id."));
         }
     }
 }

@@ -36,7 +36,7 @@ namespace CameraManager.Track
 
         public IReadOnlyList<ITrack> Track(Bitmap frame)
         {
-            IReadOnlyList<ITrack> tracks = matcher.Run(frame, targetConfidence, DetectionObjectType.Boat);
+            IReadOnlyList<ITrack> tracks = matcher.Run(frame, targetConfidence, DetectionObjectType.Person);
             return tracks;
         }
 

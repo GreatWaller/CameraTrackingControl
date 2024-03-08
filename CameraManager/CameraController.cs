@@ -288,12 +288,20 @@ namespace CameraManager
             return result;
         }
 
-        public bool PointToTargetByGeo(GeoLocation location)
+        public bool PointToTargetByGeo(GeoLocation location, string deviceId ="")
         {
             /* 1 find the nearest camera
              * 2 point camera at target
              */
-            var camera = FindNearestCamera(location);
+            CameraInfo camera = null;
+            if (string.IsNullOrWhiteSpace(deviceId))
+            {
+                camera = FindNearestCamera(location);
+            }
+            else
+            {
+                camera = cameras.FirstOrDefault((p)=>p.DeviceId == deviceId);
+            }
             if (camera ==null)
             {
                 return false;
