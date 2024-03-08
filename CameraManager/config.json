@@ -7,5 +7,5 @@
   "AppearanceWeight": 0.8,
   "SmoothAppearanceWeight": 0.875,
   "FramesToAppearanceSmooth": 40,
-  "TargetConfidence": 0.4
+  "TargetConfidence": 0.8
 }

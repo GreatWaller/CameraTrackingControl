@@ -26,7 +26,8 @@ namespace TrackingMonitor
     public partial class MainWindow : Window
     {
         private CameraController controller;
-        private string baseUri = "https://192.168.1.40:44311/api/services/app/";
+        //private string baseUri = "https://192.168.1.40:44311/api/services/app/";
+        private string baseUri = "https://localhost:44311/api/services/app/";
 
 
         private WriteableBitmap _writeableBitmap;

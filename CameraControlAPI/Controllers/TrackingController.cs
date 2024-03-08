@@ -80,14 +80,14 @@ namespace CameraControlAPI.Controllers
         {
             // TODO: some validation
             // eg. only look to south。current location: 32, 118
-            if (location.Latitude > 30)
+            if (location.Latitude > 40)
             {
                 return Ok(ResponseResult<string>.ErrorResult("Must Face to South"));
             }
 
-            cameraController.PointToTargetByGeo(location);
+            var res = cameraController.PointToTargetByGeo(location);
 
-            return Ok(ResponseResult<string>.SuccessResult("Ready"));
+            return res ? Ok(ResponseResult<string>.SuccessResult("Ready")): Ok(ResponseResult<string>.ErrorResult("Something wrong"));
         }
     }
 }

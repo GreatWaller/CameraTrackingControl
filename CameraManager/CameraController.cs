@@ -294,6 +294,10 @@ namespace CameraManager
              * 2 point camera at target
              */
             var camera = FindNearestCamera(location);
+            if (camera ==null)
+            {
+                return false;
+            }
             var target = GetRelativeCartesianCoordinates(camera.Latitude, camera.Longitude, camera.Altitude, location.Latitude, location.Longitude, location.Altitude);
 
             var result = PointToTarget(target, camera.DeviceId);

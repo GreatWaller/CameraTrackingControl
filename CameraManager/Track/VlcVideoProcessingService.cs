@@ -34,7 +34,7 @@ namespace CameraManager.Track
         public VlcVideoProcessingService(CameraInfo cameraInfo)
         {
             this.cameraInfo = cameraInfo;
-            cameraInfo.ServerStreamUri = "rtsp://192.168.1.210:554/ch3";
+            //cameraInfo.ServerStreamUri = "rtsp://192.168.1.210:554/ch3";
 
             videoProvider = new VlcVideoProvider(cameraInfo.ServerStreamUri, (uint)cameraInfo.VideoWidth, (uint)cameraInfo.VideoHeight);
             videoProvider.FrameReceived += VideoProvider_FrameReceived;
