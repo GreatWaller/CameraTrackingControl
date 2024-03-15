@@ -52,7 +52,7 @@ namespace TrackingMonitor
             var x = mousePosition.X / VideoImage.ActualWidth * 1920;
             var y = mousePosition.Y / VideoImage.ActualHeight * 1080;
             Trace.TraceInformation($"[Mouse Position: {x},{y}]");
-            controller.Click("Cam-7de4e6c1", x, y);
+            controller.Click("Cam-3345a6", x, y);
         }
 
         private unsafe void Controller_ImageChangeEvent(string deviceId, System.Drawing.Bitmap bitmap, OpenCvSharp.Rect2d detection)
@@ -112,7 +112,7 @@ namespace TrackingMonitor
         {
             try
             {
-                controller.CreateVideoProcess("Cam-7de4e6c1");
+                controller.CreateVideoProcess("Cam-3345a6");
             }
             catch (Exception)
             {

@@ -181,6 +181,10 @@ namespace CameraManager
         {
             if (FrameCounter++ % 4 ==0)
             {
+                if (FilesToProcess.Count>32)
+                {
+                    return;
+                }
                 FilesToProcess.Enqueue((CurrentMappedFile, CurrentMappedViewAccessor));
                 CurrentMappedFile = null;
                 CurrentMappedViewAccessor = null;

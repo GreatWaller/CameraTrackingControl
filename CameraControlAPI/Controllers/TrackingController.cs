@@ -55,13 +55,21 @@ namespace CameraControlAPI.Controllers
                 return Ok(ResponseResult<string>.ErrorResult("X and Y coordinates cannot be negative."));
 
             }
-
-            // tracking
-            if (!cameraController.Click(trackingInfo.DeviceId, trackingInfo.X, trackingInfo.Y))
+            try
             {
-                return Ok(ResponseResult<string>.ErrorResult("X and Y coordinates cannot be negative."));
+                if (!cameraController.Click(trackingInfo.DeviceId, trackingInfo.X, trackingInfo.Y))
+                {
+                    return Ok(ResponseResult<string>.ErrorResult("X and Y coordinates cannot be negative."));
+
+                }
+            }
+            catch (Exception ex)
+            {
+                return Ok(ResponseResult<string>.ErrorResult(ex.Message));
 
             }
+            // tracking
+
             // Return a success message.
             return Ok(ResponseResult<string>.SuccessResult("Tracking info saved successfully"));
         }

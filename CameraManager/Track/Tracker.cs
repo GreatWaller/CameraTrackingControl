@@ -81,8 +81,8 @@ namespace CameraManager.Track
 
             IPredictor predictor = options.YoloVersion switch
             {
-                YoloVersion.Yolo640 => new YoloScorer<Yolo640v5>(File.ReadAllBytes(options.DetectorFilePath), SessionOptions.MakeSessionOptionWithCudaProvider()),
-                YoloVersion.Yolo1280 => new YoloScorer<Yolo1280v5>(File.ReadAllBytes(options.DetectorFilePath), SessionOptions.MakeSessionOptionWithCudaProvider()),
+                YoloVersion.Yolo640 => new YoloScorer<Yolo640v5>(File.ReadAllBytes(options.DetectorFilePath)),
+                YoloVersion.Yolo1280 => new YoloScorer<Yolo1280v5>(File.ReadAllBytes(options.DetectorFilePath)),
                 _ => throw new Exception("Yolo predictor cannot be constructed.")
             };
 
@@ -102,9 +102,9 @@ namespace CameraManager.Track
             IAppearanceExtractor appearanceExtractor = options.AppearanceExtractorVersion switch
             {
                 AppearanceExtractorVersion.OSNet => new ReidScorer<OSNet_x1_0>(File.ReadAllBytes(options.AppearanceExtractorFilePath),
-                    options.ExtractorsInMemoryCount ?? DefaultExtractorsCount, SessionOptions.MakeSessionOptionWithCudaProvider()),
+                    options.ExtractorsInMemoryCount ?? DefaultExtractorsCount),
                 AppearanceExtractorVersion.FastReid => new ReidScorer<Fast_Reid_mobilenetv2>(File.ReadAllBytes(options.AppearanceExtractorFilePath),
-                    options.ExtractorsInMemoryCount ?? DefaultExtractorsCount, SessionOptions.MakeSessionOptionWithCudaProvider()),
+                    options.ExtractorsInMemoryCount ?? DefaultExtractorsCount),
                 _ => throw new Exception("Appearance extractor cannot be constructed.")
             };
 
