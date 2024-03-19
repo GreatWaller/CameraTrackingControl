@@ -1,5 +1,4 @@
 ﻿using LibVLCSharp.Shared;
-using RTSP.RawFramesDecoding.DecodedFrames;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Processing;
@@ -179,9 +178,9 @@ namespace CameraManager
 
         private void DisplayCallback(IntPtr opaque, IntPtr picture)
         {
-            if (FrameCounter++ % 4 ==0)
+            if (FrameCounter++ % 24 ==0)
             {
-                if (FilesToProcess.Count>32)
+                if (FilesToProcess.Count>8)
                 {
                     return;
                 }

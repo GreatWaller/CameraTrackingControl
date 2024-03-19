@@ -9,10 +9,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy $(SolutionDir)CameraManager\RTSP\lib\x64\*.dll  $(TargetDir)  /Y /E /C /F" />
-  </Target>
-
   <ItemGroup>
     <ProjectReference Include="..\CameraManager\CameraManager.csproj" />
   </ItemGroup>

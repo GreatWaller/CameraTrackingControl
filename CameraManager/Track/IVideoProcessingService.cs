@@ -15,7 +15,9 @@ namespace CameraManager.Track
         public event DetectionEventHandler? DetectionEvent;
         public event ImageChangeEventHandler? ImageChangeEvent;
         void LookTo(Rect2d box);
-        public void Start(string videoPath);
+        public void Prepare(string videoPath);
+
+        public void Start();
         public void Stop();
     }
 }

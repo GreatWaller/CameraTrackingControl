@@ -99,43 +99,7 @@ namespace CameraManager
             }
         }
 
-        #region calculate by pixel，no need for now
-
-        // 计算物体在相机图像中的位置
-        private PointF CalculateObjectPositionInImage(Vector3 objectCoordinates, Camera camera)
-        {
-            // 将物体坐标从世界坐标系转换到相机坐标系
-            var objectCoordinatesInCameraCoordinates = camera.CameraRotationMatrix * objectCoordinates;
-
-            // 计算物体在相机图像中的位置
-            var objectPositionInImage = new PointF
-            {
-                X = (float)((objectCoordinatesInCameraCoordinates.X / objectCoordinatesInCameraCoordinates.Z) * camera.FocalLength),
-                Y = (float)((objectCoordinatesInCameraCoordinates.Y / objectCoordinatesInCameraCoordinates.Z) * camera.FocalLength)
-            };
-
-            return objectPositionInImage;
-        }
-
-        // 计算相机需要水平转动的角度
-        private double CalculateHorizontalPanAngle(Vector3 objectPositionInImage, Camera camera)
-        {
-            // 计算相机需要水平转动的角度
-            var horizontalPanAngle = Math.Atan2(objectPositionInImage.X, camera.FocalLength) * 180 / Math.PI - camera.HorizontalPanAngle;
-
-            return horizontalPanAngle;
-        }
-
-
-        // 计算相机需要垂直转动的角度
-        private double CalculateVerticalTiltAngle(Vector3 objectPositionInImage, Camera camera)
-        {
-            // 计算相机需要垂直转动的角度
-            var verticalTiltAngle = Math.Atan2(objectPositionInImage.Y, camera.FocalLength) * 180 / Math.PI - camera.VerticalTiltAngle;
-
-            return verticalTiltAngle;
-        }
-        #endregion
+       
 
         #region core
 
@@ -451,8 +415,8 @@ namespace CameraManager
             videoProcessingService.ImageChangeEvent += VideoProcessingService_ImageChangeEvent;
             videoProcessServices.Add(deviceId, videoProcessingService);
             //cameraInfo.ServerStreamUri = "rtsp://192.168.1.210:554/ch3";
-            videoProcessingService.Start(cameraInfo.ServerStreamUri);
-
+            videoProcessingService.Prepare(cameraInfo.ServerStreamUri);
+            videoProcessingService.Start();
             return true;
         }
 

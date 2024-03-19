@@ -1,8 +1,6 @@
 ﻿using CameraManager.OnvifCamera;
 using MOT.CORE.Matchers.Abstract;
 using OpenCvSharp;
-using RTSP.RawFramesDecoding.DecodedFrames;
-using RTSP.RawFramesDecoding;
 using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
@@ -27,7 +25,7 @@ namespace CameraManager.Track
         private bool isLooking = false;
         private int trackId = 0;
         private Rect2d targetBox;
-        private bool isClosing = false;
+        private bool isClosing = true;
         private const int MaxMissed = 3;
         private int missedCount = 0;
         private const int MaxNoDetection = 5;
@@ -165,14 +163,20 @@ namespace CameraManager.Track
             isLooking = true;
         }
 
-        public void Start(string videoPath)
+        public void Prepare(string videoPath)
         {
             videoProvider?.Start();
+        }
+
+        public void Start() 
+        {
+            isClosing = false;
         }
 
         public void Stop()
         {
             videoProvider?.Stop();
+            isClosing = true;
         }
     }
 }
